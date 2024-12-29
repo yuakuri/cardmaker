@@ -412,47 +412,33 @@ function toggleMainImage() {
 }
 
 function generateImage() {
-    const text = document.getElementById('text-input').value;
+  const text = document.getElementById('text-input').value;
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-
-        // 現在のcanvasの状態を保存
-        ctx.save();
 
     const imageWidth = 630;
     const imageHeight = 880;
     const canvasWidth = 630;
     const canvasHeight = 880;
 
-    // 選択された背景画像を使用
-    const img = new Image();
-    img.onload = function() {
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
-        ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+    // キャンバスのサイズを設定
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
 
-                // テキストやその他の要素を描画
-                redrawCardElements();
-
-        // 状態を復元
-        ctx.restore();
-    };
-
-            // backgroundMenu.jsで選択された画像のsrcを使用
-            const selectedImage = document.querySelector('.background-item img');
-    if (selectedImage) {
-        img.src = selectedImage.src;
+    // 背景がある場合は描画
+    if (currentBackground) {
+        ctx.drawImage(currentBackground, 0, 0, canvasWidth, canvasHeight);
     }
+
+    // カード要素を描画
+    drawCardElements();
+  }
 
     function drawCardElements() {
 
       const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    
-    // 背景がある場合は最初に描画
-    if (currentBackground) {
-        ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
-    }
+
       // カード名のスタイルを設定
       ctx.font = '900 64px "Poppins-black"';
       ctx.fillStyle = 'white';
@@ -549,8 +535,6 @@ for (var i = 0; i < starsCount; i++) {
       var resultImg = document.createElement('img');
       resultImg.src = dataURL;
     }
-
-  };
 
     function resetMenu() {
       // エクセルデータと関連する変数や状態をリセット
