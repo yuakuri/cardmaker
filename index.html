@@ -422,6 +422,9 @@ function generateImage() {
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
+        // 現在のcanvasの状態を保存
+        ctx.save();
+
     const imageWidth = 630;
     const imageHeight = 880;
     const canvasWidth = 630;
@@ -436,7 +439,9 @@ function generateImage() {
 
                 // テキストやその他の要素を描画
         drawCardElements();
-
+        
+        // 状態を復元
+        ctx.restore();
     };
 
             // backgroundMenu.jsで選択された画像のsrcを使用
