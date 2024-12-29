@@ -37,4 +37,30 @@ function setCanvasBackground(imageSrc) {
     image.src = imageSrc;
 }
 
-window.onload = fetchBackgrounds;
+// Excelファイルを自動で読み込む関数
+async function readExcelAutomatically() {
+    return new Promise(async (resolve, reject) => {
+          try {
+              const response = await fetch('assets/data.xlsx');
+              if (!response.ok) {
+                  throw new Error('Excelファイルの取得に失敗しました');
+              }
+  
+              const arrayBuffer = await response.arrayBuffer();
+              const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+              const sheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[sheetName];
+  
+              data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  
+              createMenu(); // メニュー生成
+              resolve(); // 成功時に解決
+          } catch (error) {
+              console.error('Excelファイルの読み込みに失敗しました', error);
+              reject(error); // 失敗時にエラーを返す
+          }
+      });
+  }
+  
+
+window.onload = fetchBackgrounds,readExcelAutomatically;
