@@ -270,9 +270,9 @@ function toggleCardType(cardType) {
   ctx.fill();
 }
 
-  function generateCardtype() {
-  var canvas = document.getElementById('canvas');
-  var ctx = canvas.getContext('2d');
+function generateCardtype() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
 
     // 画面をクリア
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -282,44 +282,38 @@ function toggleCardType(cardType) {
         ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
     }
 
-  var activeCardTypeFound = false;
+    // フォントの設定を先に行う
+    ctx.font = "28px Noto Sans JP";
+    var activeCardTypeFound = false;
 
-  for (var cardType in activeCardTypes) {
-    if (activeCardTypes[cardType]) {
-      activeCardTypeFound = true;
+    for (const cardType in activeCardTypes) {
+        if (activeCardTypes[cardType]) {
+            activeCardTypeFound = true;
 
-      // テキストのサイズを計算
-      var textMetrics = ctx.measureText(cardType);
-      var textWidth = textMetrics.width;
-      var textHeight = 28; // フォントサイズをテキストの高さとして使用
+            // テキストのサイズを計算
+            const textMetrics = ctx.measureText(cardType);
+            const textWidth = textMetrics.width;
+            const textHeight = 28;
 
-      // テキストの位置を計算
-      var textX = (canvas.width - textWidth) / 2; // テキストを中央に配置
-      var textY = 850; // 開始するY座標
+            // テキストの位置を計算
+            const textX = (canvas.width - textWidth) / 2;
+            const textY = 850;
 
-      // 角が丸い背景を描画
-      ctx.fillStyle = '#444444';
-      drawRoundedRect(ctx, textX - 10, textY - textHeight, textWidth + 18, textHeight + 18, 10);
+            // 背景を描画（角丸の四角形）
+            ctx.save();  // 現在の描画状態を保存
+            ctx.fillStyle = '#444444';
+            drawRoundedRect(ctx, textX - 10, textY - textHeight, textWidth + 18, textHeight + 18, 10);
 
-      // テキストの塗りつぶしを描画
-      ctx.fillStyle = 'white';
-      ctx.fillText(cardType, textX, textY);
+            // テキストを描画
+            ctx.fillStyle = 'white';
+            ctx.fillText(cardType, textX, textY);
+            ctx.restore();  // 描画状態を元に戻す
 
-      // テキストの枠線を描画
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 0;
-      ctx.strokeText(cardType, textX, textY);
-
-      break; // アクティブなカードタイプが見つかったらループを抜ける
+            break;
+        }
     }
-  }
-
-
-  if (!activeCardTypeFound) {
-    // アクティブなカードタイプがない場合の処理
-
-  }
 }
+
 
   
 // 画像アップロード時にCroppieに画像を読み込むイベントリスナーを追加
