@@ -3,9 +3,12 @@
 <head>
 
   <meta charset="UTF-8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
   <!-- CroppieのCSSを追加 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css" />
-  
+
   <style>
 
     /* Croppie領域のスタイルをキャンバスに合わせて調整 */
@@ -94,6 +97,36 @@
   color: black; /* テキストが見やすいようにする */
 }
 
+    #backgroundMenu {
+        display: flex;
+        flex-wrap: wrap; /* 要素を折り返して表示 */
+        gap: 10px; /* アイテム間のスペース */
+        margin-bottom: 20px; /* 下部余白 */
+    }
+
+    .background-item {
+        width: 100px;
+        height: 100px;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: transform 0.2s;
+    }
+
+    .background-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .background-item:hover {
+        transform: scale(1.1);
+        border-color: #007bff;
+    }
 
   </style>
 </head>
@@ -150,6 +183,9 @@
         <input type="file" id="imageFile" accept="image/*">
         <br>
       <button onclick="readImage()">確定</button> <br>
+      <div id="backgroundMenu"></div>
+      <script src="scripts/backgroundMenu.js"></script>
+      
       
       <h4>メイン画像</h4>
       <input type="file" id="upload" accept="image/*">
@@ -433,8 +469,8 @@ function toggleMainImage() {
     function generateImage() {
       var text = document.getElementById('text-input').value;
 
-      var canvas = document.getElementById('canvas');
-      var ctx = canvas.getContext('2d');
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
 
       var imageWidth = 630;  // 画像の幅（ピクセル）
       var imageHeight = 880; // 画像の高さ（ピクセル）
@@ -453,7 +489,7 @@ function toggleMainImage() {
       ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
 
       // カード名のスタイルを設定
-      ctx.font = 'bold 64px arial black';
+      ctx.font = '900 64px "Poppins-black"';
       ctx.fillStyle = 'white';
       ctx.lineWidth = 6;
       ctx.strokeText(text, 15, 60);
@@ -465,10 +501,10 @@ function toggleMainImage() {
       ctx.fillStyle = 'white';
       ctx.strokeStyle = 'red';
       if (document.getElementById("showATK").checked) {
-        ctx.font = '40px Arial Black';
+        ctx.font = '900 40px "Poppins-black"';
         ctx.strokeText('ATK ', 30, 865);
         ctx.fillText('ATK ', 30, 865);
-        ctx.font = '64px Arial Black';
+        ctx.font = '900 64px "Poppins-black"';
         ctx.strokeText(counterValue1, 130, 865);
         ctx.fillText(counterValue1, 130, 865);
       }
@@ -477,10 +513,10 @@ function toggleMainImage() {
       ctx.fillStyle = 'white';
       ctx.strokeStyle = 'green';
       if (document.getElementById("showDEF").checked) {
-        ctx.font = '40px Arial Black';
+        ctx.font = '900 40px "Poppins-black"';
         ctx.strokeText('HP', 495, 865);
         ctx.fillText('HP', 495, 865);
-        ctx.font = '64px Arial Black';
+        ctx.font = '900 64px "Poppins-black"';
         ctx.strokeText(counterValue2, 560, 865);
         ctx.fillText(counterValue2, 560, 865);
       }
@@ -489,16 +525,16 @@ function toggleMainImage() {
       ctx.fillStyle = 'white';
       ctx.strokeStyle = 'green';
       if (document.getElementById("showHP").checked) {
-        ctx.font = '40px Arial Black';
+        ctx.font = '900 40px "Poppins-black"';
         ctx.strokeText('HP', 465, 865);
         ctx.fillText('HP', 465, 865);
-        ctx.font = '64px Arial Black';
+        ctx.font = '900 64px "Poppins-black"';
         ctx.strokeText(counterValue5, 530, 865);
         ctx.fillText(counterValue5, 530, 865);
       }
 
       // COSTの値を描画
-ctx.font = '46px Arial Black';
+ctx.font = '400 46px "Poppins-black"';
 ctx.fillStyle = 'yellow'; // 初期の★の色
 
 // コストが負の値にならないように確認
@@ -524,7 +560,7 @@ for (var i = 0; i < starsCount; i++) {
 }
 
       // アクティブなボタンのテキストを描画
-      ctx.font = '19px ヒラギノ角ゴシック';
+      ctx.font = '19px Noto Sans JP';
       ctx.fillStyle = 'Black';
       ctx.strokeStyle = 'Black';
       ctx.lineWidth = 0.5;
@@ -768,6 +804,50 @@ function getCroppedImage() {
     console.error('Croppieのresultの取得に失敗しました', error);
   });
 }
+
+async function fetchBackgrounds() {
+    try {
+        // サーバーから画像リストを取得
+        const response = await fetch('00_backgrounds.json');
+        if (!response.ok) {
+            throw new Error('画像リストの取得に失敗しました');
+        }
+        const backgrounds = await response.json();
+        generateBackgroundMenu(backgrounds); // メニュー生成関数を呼び出し
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+function generateBackgroundMenu(backgroundImages) {
+    const menu = document.getElementById("backgroundMenu");
+    menu.innerHTML = ""; // メニューを初期化
+
+    backgroundImages.forEach(image => {
+        const item = document.createElement("div");
+        item.className = "background-item";
+        item.innerHTML = `<img src="${image.src}" alt="${image.name}">`;
+        item.title = image.name;
+
+        // クリックでCanvasに背景を描画
+        item.addEventListener("click", () => setCanvasBackground(image.src));
+        menu.appendChild(item);
+    });
+}
+
+function setCanvasBackground(imageSrc) {
+    const image = new Image();
+    image.onload = function () {
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Canvasをクリア
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height); // 背景を描画
+    };
+    image.src = imageSrc;
+}
+
+// ページ読み込み時に背景画像リストを取得
+window.onload = fetchBackgrounds;
 
   </script>
 
