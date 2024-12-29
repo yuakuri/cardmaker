@@ -419,27 +419,22 @@ function toggleMainImage() {
   getCroppedImage();
 }
 
-    function generateImage() {
-      var text = document.getElementById('text-input').value;
+function generateImage() {
+    const text = document.getElementById('text-input').value;
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
 
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
+    const imageWidth = 630;
+    const imageHeight = 880;
+    const canvasWidth = 630;
+    const canvasHeight = 880;
 
-      var imageWidth = 630;  // 画像の幅（ピクセル）
-      var imageHeight = 880; // 画像の高さ（ピクセル）
-      var canvasWidth = 630; // Canvasの幅（ピクセル）
-      var canvasHeight = 880; // Canvasの高さ（ピクセル）
-
-      // 画像の比率を計算
-      var widthRatio = canvasWidth / imageWidth;
-      var heightRatio = canvasHeight / imageHeight;
-
-      // Canvasのサイズを変更
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-
-      // 画像を描画
-      ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+    // 選択された背景画像を使用
+    const img = new Image();
+    img.onload = function() {
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
 
       // カード名のスタイルを設定
       ctx.font = '900 64px "Poppins-black"';
@@ -536,6 +531,13 @@ for (var i = 0; i < starsCount; i++) {
       // 画像を表示
       var resultImg = document.createElement('img');
       resultImg.src = dataURL;
+    }
+
+  };
+        // backgroundMenu.jsで選択された画像のsrcを使用
+        const selectedImage = document.querySelector('.background-item img');
+    if (selectedImage) {
+        img.src = selectedImage.src;
     }
 
     function resetMenu() {
