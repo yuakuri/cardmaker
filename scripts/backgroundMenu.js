@@ -44,7 +44,7 @@ let currentBackground = null;
 
 function setCanvasBackground(imageSrc) {
     const image = new Image();
-    image.onload = function () {
+    image.onload = function() {
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
         
@@ -62,6 +62,7 @@ function setCanvasBackground(imageSrc) {
     };
     image.src = imageSrc;
 }
+
 
 
 
