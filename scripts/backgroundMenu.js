@@ -62,5 +62,7 @@ async function readExcelAutomatically() {
       });
   }
   
+  window.onload = async function () {
+    await Promise.all([fetchBackgrounds(), readExcelAutomatically()]);
+};
 
-window.onload = fetchBackgrounds,readExcelAutomatically;
