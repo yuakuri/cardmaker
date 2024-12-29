@@ -75,6 +75,7 @@ function redrawCardElements() {
     
     // その他のカード要素を描画
     drawCardElements();
+    generateCardtype();
 
 }
 
