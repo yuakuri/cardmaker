@@ -556,7 +556,6 @@ for (var i = 0; i < starsCount; i++) {
 // ページの初期化処理を1つにまとめる
 async function initializePage() {
     try {
-        await fetchBackgrounds(); // 背景画像を読み込む
         await readExcelAutomatically(); // Excelデータを読み込む
         console.log("Page initialized successfully.");
     } catch (error) {
