@@ -434,15 +434,9 @@ function generateImage() {
         canvas.height = canvasHeight;
         ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
 
-        
-        // 現在のcanvasの状態を保存
-        ctx.save();
-
                 // テキストやその他の要素を描画
         drawCardElements();
-        
-        // 状態を復元
-        ctx.restore();
+
     };
 
             // backgroundMenu.jsで選択された画像のsrcを使用
