@@ -422,25 +422,6 @@ function toggleMainImage() {
     function generateImage() {
       var text = document.getElementById('text-input').value;
 
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
-
-      var imageWidth = 630;  // 画像の幅（ピクセル）
-      var imageHeight = 880; // 画像の高さ（ピクセル）
-      var canvasWidth = 630; // Canvasの幅（ピクセル）
-      var canvasHeight = 880; // Canvasの高さ（ピクセル）
-
-      // 画像の比率を計算
-      var widthRatio = canvasWidth / imageWidth;
-      var heightRatio = canvasHeight / imageHeight;
-
-      // Canvasのサイズを変更
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-
-      // 画像を描画
-      ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
-
       // カード名のスタイルを設定
       ctx.font = '900 64px "Poppins-black"';
       ctx.fillStyle = 'white';
