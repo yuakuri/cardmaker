@@ -27,11 +27,20 @@ function generateBackgroundMenu(backgroundImages) {
 }
 
 function setCanvasBackground(imageSrc) {
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // 現在のキャンバス内容を保持
+    const currentContent = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
     const image = new Image();
     image.onload = function () {
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
+        // 背景画像を描画
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // 一旦クリア
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+        // 元の内容を上から再描画
+        ctx.putImageData(currentContent, 0, 0);
     };
     image.src = imageSrc;
 }
