@@ -11,6 +11,9 @@ async function fetchBackgrounds() {
     }
 }
 
+// グローバル変数として選択された背景画像を保存
+let selectedBackgroundImage = null;
+
 function generateBackgroundMenu(backgroundImages) {
     const menu = document.getElementById("backgroundMenu");
     menu.innerHTML = "";
@@ -21,11 +24,22 @@ function generateBackgroundMenu(backgroundImages) {
         item.innerHTML = `<img src="${image.src}" alt="${image.name}">`;
         item.title = image.name;
 
-        item.addEventListener("click", () => setCanvasBackground(image.src));
+        item.addEventListener("click", () => {
+            // クリックされた画像を保存
+            selectedBackgroundImage = image;
+            setCanvasBackground(image.src);
+            
+            // 選択状態の見た目を更新
+            menu.querySelectorAll('.background-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            item.classList.add('selected');
+        });
         menu.appendChild(item);
     });
 }
 
+// グローバル変数で背景を管理
 let currentBackground = null;
 
 function setCanvasBackground(imageSrc) {
@@ -37,15 +51,15 @@ function setCanvasBackground(imageSrc) {
         // 背景画像を保存
         currentBackground = image;
         
-        // キャンバスをクリアして再描画
+        // 画面クリア
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
         
-        // 他の要素を再描画
-        redrawCardElements();
+        // 背景描画
+        ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
     };
     image.src = imageSrc;
 }
+
 
 function redrawCardElements() {
     // 保存された背景画像がある場合は再描画
