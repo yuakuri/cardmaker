@@ -19,7 +19,7 @@
 
 ツールの利用方法
 
-1.https://yuakuri.github.io/cardmaker/をダブルクリック
+1.https://yuakuri.github.io/cardmaker/ をダブルクリック
 
 2.カードフレーム画像を選択
 
