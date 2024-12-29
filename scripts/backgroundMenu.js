@@ -56,6 +56,9 @@ function setCanvasBackground(imageSrc) {
         
         // 背景描画
         ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
+
+                // カードタイプを再描画
+                generateCardtype();
     };
     image.src = imageSrc;
 }
