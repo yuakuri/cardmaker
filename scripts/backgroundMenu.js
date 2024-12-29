@@ -27,29 +27,15 @@ function generateBackgroundMenu(backgroundImages) {
 }
 
 function setCanvasBackground(imageSrc) {
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-
-    // 背景画像を先に描画してから、既存の内容を描画する
     const image = new Image();
     image.onload = function () {
-        // 一旦キャンバスをクリア
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // 背景画像を描画
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-        // 既存のキャンバス内容を保持している場合
-        if (window.savedCanvasContent) {
-            ctx.putImageData(window.savedCanvasContent, 0, 0);
-        }
     };
     image.src = imageSrc;
-
-    // 現在のキャンバス内容を保存（背景を描画する前に）
-    window.savedCanvasContent = ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
-
 
 // Excelファイルを自動で読み込む関数
 async function readExcelAutomatically() {
