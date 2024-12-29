@@ -91,8 +91,14 @@
 
 .background-item:hover {
     transform: scale(1.1);
-    border-color: #007bff;
+    border-color: blue;
 }
+
+.background-item.selected {
+    border: 2px solid blue;
+    background-color: #e0e0e0;
+}
+
 
   </style>
 </head>
@@ -439,7 +445,7 @@ function generateImage() {
 
                 // テキストやその他の要素を描画
         drawCardElements();
-        
+
         // 状態を復元
         ctx.restore();
     };
@@ -451,6 +457,14 @@ function generateImage() {
     }
 
     function drawCardElements() {
+
+      const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    
+    // 背景がある場合は最初に描画
+    if (currentBackground) {
+        ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
+    }
       // カード名のスタイルを設定
       ctx.font = '900 64px "Poppins-black"';
       ctx.fillStyle = 'white';
