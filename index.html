@@ -191,54 +191,45 @@ var cardTypeCosts = {
 var activeCardTypes = {}; // アクティブなカードタイプを追跡するオブジェクト
 
 function toggleCardType(cardType) {
-  var buttonId = cardType + "Button"; // ボタンのIDを生成（例: "unitButton"）
-  var button = document.getElementById(buttonId);
+    const buttonId = cardType + "Button";
+    const button = document.getElementById(buttonId);
 
-  if (!button) {
-    console.error("Button not found: " + buttonId);
-    return;
-  }
-
-  var isActive = activeCardTypes[cardType];
-  var cardCost = cardTypeCosts[cardType];
-
-   // 既にアクティブなカードタイプがあるかチェック
-   var alreadyActive = false;
-  for (var type in activeCardTypes) {
-    if (activeCardTypes[type]) {
-      alreadyActive = true;
-      break;
+    if (!button) {
+        console.error("Button not found: " + buttonId);
+        return;
     }
-  }
 
-  // 既にアクティブなカードタイプがある場合はエラーメッセージを表示
-  if (alreadyActive && !activeCardTypes[cardType]) {
-    alert("他のカードタイプが既に選択されています。");
-    return;
-  }
+    const isActive = activeCardTypes[cardType];
+    const cardCost = cardTypeCosts[cardType];
 
-  // 選択されたカードタイプをアクティブにし、関連するボタンのスタイルを更新
-  activeCardTypes[cardType] = true;
-  button.classList.add("active");
+    // 他のカードタイプが選択されているかチェック
+    const otherTypeActive = Object.entries(activeCardTypes)
+        .some(([type, active]) => type !== cardType && active);
 
-  if (isActive) {
-    // アクティブな場合の処理
-    counterValue6 = -cardCost;
-    activeCardTypes[cardType] = false;
-    button.classList.remove("active");
-  } else {
-    // 非アクティブな場合の処理
-    counterValue6 = cardCost;
-    activeCardTypes[cardType] = true;
-    button.classList.add("active");
-  }
+    // 他のタイプが選択済みで、このタイプが非アクティブの場合
+    if (otherTypeActive && !isActive) {
+        alert("他のカードタイプが既に選択されています。");
+        return;
+    }
 
-  // 画像を再生成する関数など、必要に応じて追加の処理を行う
-  updateResult(counterValue6); // 効果COSTを更新
-  generateImage();
-  generateCardtype();
-  getCroppedImage();
+    // トグル処理
+    if (isActive) {
+        counterValue6 = -cardCost;
+        activeCardTypes[cardType] = false;
+        button.classList.remove("active");
+    } else {
+        counterValue6 = cardCost;
+        activeCardTypes[cardType] = true;
+        button.classList.add("active");
+    }
+
+    // 更新処理
+    updateResult(counterValue6);
+    generateImage();
+    generateCardtype();
+    getCroppedImage();
 }
+
 
     var secondImg;
 
@@ -274,46 +265,41 @@ function generateCardtype() {
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
+    // デバッグ用：現在の状態確認
+    console.log('Drawing cardtype, currentBackground:', currentBackground);
+    console.log('Active card types:', activeCardTypes);
+
     // 画面をクリア
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 背景がある場合は最初に描画
+    // 背景描画
     if (currentBackground) {
         ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
     }
 
-    // フォントの設定を先に行う
-    ctx.font = "28px Noto Sans JP";
-    var activeCardTypeFound = false;
+    // フォント設定（太字を追加）
+    ctx.font = "bold 28px Noto Sans JP";
 
     for (const cardType in activeCardTypes) {
         if (activeCardTypes[cardType]) {
-            activeCardTypeFound = true;
-
-            // テキストのサイズを計算
+            // テキスト描画位置の調整
             const textMetrics = ctx.measureText(cardType);
             const textWidth = textMetrics.width;
-            const textHeight = 28;
-
-            // テキストの位置を計算
             const textX = (canvas.width - textWidth) / 2;
             const textY = 850;
 
-            // 背景を描画（角丸の四角形）
-            ctx.save();  // 現在の描画状態を保存
+            // 背景の描画
             ctx.fillStyle = '#444444';
-            drawRoundedRect(ctx, textX - 10, textY - textHeight, textWidth + 18, textHeight + 18, 10);
+            drawRoundedRect(ctx, textX - 10, textY - 28, textWidth + 20, 40, 10);
 
-            // テキストを描画
+            // テキストの描画（白色）
             ctx.fillStyle = 'white';
             ctx.fillText(cardType, textX, textY);
-            ctx.restore();  // 描画状態を元に戻す
-
+            
             break;
         }
     }
 }
-
 
   
 // 画像アップロード時にCroppieに画像を読み込むイベントリスナーを追加
