@@ -553,16 +553,6 @@ for (var i = 0; i < starsCount; i++) {
 
 }
 
-// ページの初期化処理を1つにまとめる
-async function initializePage() {
-    try {
-        await readExcelAutomatically(); // Excelデータを読み込む
-        console.log("Page initialized successfully.");
-    } catch (error) {
-        console.error("Initialization error:", error);
-    }
-}
-
 // Excelファイルを自動で読み込む関数
 async function readExcelAutomatically() {
   return new Promise(async (resolve, reject) => {
@@ -764,8 +754,7 @@ function getCroppedImage() {
   });
 }
 
-// ページロード時に初期化処理を実行
-window.onload = initializePage;
+window.onload = readExcelAutomatically;
 
   </script>
 
