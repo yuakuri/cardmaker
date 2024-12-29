@@ -101,9 +101,10 @@
 
 <div class="container">
 
+  <div id="backgroundMenu"></div>
     <div id="croppie-container"></div>
     <canvas id="canvas" width="630px" height="880px"></canvas>
-    <div id="backgroundMenu"></div>
+
 
     <div>
         <label for="text-input">カード名入力:</label>
@@ -552,11 +553,6 @@ for (var i = 0; i < starsCount; i++) {
       container.innerHTML = '';
 
 }
-
-// ページロード時に自動でExcelファイルを読み込む
-window.onload = function() {
-    readExcelAutomatically(); // 自動読み込みを実行
-};
 
 // Excelファイルを自動で読み込む関数
 async function readExcelAutomatically() {
