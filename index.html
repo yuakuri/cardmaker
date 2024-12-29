@@ -583,11 +583,13 @@ async function readExcelAutomatically() {
 window.onload = function () {
     readExcelAutomatically()
         .then(() => {
-            // Excel読み込み完了後にフレーム画像を読み込む
-            loadFrameImage();
+            fetchBackgrounds(); // 背景メニューを生成
+        })
+        .then(() => {
+            loadFrameImage(); // フレーム画像を描画
         })
         .catch((error) => {
-            console.error('処理中にエラーが発生しました', error);
+            console.error('初期化処理中にエラーが発生しました', error);
         });
 };
 
@@ -630,9 +632,6 @@ function setCanvasBackground(imageSrc) {
     };
     image.src = imageSrc;
 }
-
-window.onload = fetchBackgrounds;
-
 }
 
     function createMenu() {
