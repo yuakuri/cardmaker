@@ -429,6 +429,9 @@ function generateImage() {
     const canvasWidth = 630;
     const canvasHeight = 880;
 
+        // 現在のcanvasの状態を保存
+        ctx.save();
+
     // 選択された背景画像を使用
     const img = new Image();
     img.onload = function() {
@@ -436,6 +439,20 @@ function generateImage() {
         canvas.height = canvasHeight;
         ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
 
+                // テキストやその他の要素を描画
+        drawCardElements();
+        
+        // 状態を復元
+        ctx.restore();
+    };
+
+            // backgroundMenu.jsで選択された画像のsrcを使用
+            const selectedImage = document.querySelector('.background-item img');
+    if (selectedImage) {
+        img.src = selectedImage.src;
+    }
+
+    function drawCardElements() {
       // カード名のスタイルを設定
       ctx.font = '900 64px "Poppins-black"';
       ctx.fillStyle = 'white';
@@ -534,11 +551,6 @@ for (var i = 0; i < starsCount; i++) {
     }
 
   };
-        // backgroundMenu.jsで選択された画像のsrcを使用
-        const selectedImage = document.querySelector('.background-item img');
-    if (selectedImage) {
-        img.src = selectedImage.src;
-    }
 
     function resetMenu() {
       // エクセルデータと関連する変数や状態をリセット
