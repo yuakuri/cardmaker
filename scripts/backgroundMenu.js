@@ -26,16 +26,39 @@ function generateBackgroundMenu(backgroundImages) {
     });
 }
 
+let currentBackground = null;
+
 function setCanvasBackground(imageSrc) {
     const image = new Image();
-    image.onload = function () {
+    image.onload = function() {
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
+        
+        // 背景画像を保存
+        currentBackground = image;
+        
+        // キャンバスをクリアして再描画
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        
+        // 他の要素を再描画
+        redrawCardElements();
     };
     image.src = imageSrc;
 }
+
+function redrawCardElements() {
+    // 保存された背景画像がある場合は再描画
+    if (currentBackground) {
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
+    }
+    
+    // その他のカード要素を描画
+    drawCardElements();
+}
+
 
 // Excelファイルを自動で読み込む関数
 async function readExcelAutomatically() {
