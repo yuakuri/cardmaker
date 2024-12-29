@@ -101,10 +101,10 @@
 
 <div class="container">
 
-  <div id="backgroundMenu"></div>
     <div id="croppie-container"></div>
+    <div id="backgroundMenu"></div>
+    <script src="scripts/backgroundMenu.js"></script>
     <canvas id="canvas" width="630px" height="880px"></canvas>
-
 
     <div>
         <label for="text-input">カード名入力:</label>
@@ -554,6 +554,11 @@ for (var i = 0; i < starsCount; i++) {
 
 }
 
+// ページロード時に自動でExcelファイルを読み込む
+window.onload = function() {
+    readExcelAutomatically(); // 自動読み込みを実行
+};
+
 // Excelファイルを自動で読み込む関数
 async function readExcelAutomatically() {
   return new Promise(async (resolve, reject) => {
@@ -577,61 +582,6 @@ async function readExcelAutomatically() {
             reject(error); // 失敗時にエラーを返す
         }
     });
-}
-
-// ページロード時にPromiseを使って順次処理を実行
-window.onload = function () {
-    readExcelAutomatically()
-        .then(() => {
-            fetchBackgrounds(); // 背景メニューを生成
-        })
-        .then(() => {
-            loadFrameImage(); // フレーム画像を描画
-        })
-        .catch((error) => {
-            console.error('初期化処理中にエラーが発生しました', error);
-        });
-};
-
-function loadFrameImage() {
-async function fetchBackgrounds() {
-    try {
-        const response = await fetch('assets/00_backgrounds.json');
-        if (!response.ok) {
-            throw new Error('画像リストの取得に失敗しました');
-        }
-        const backgrounds = await response.json();
-        generateBackgroundMenu(backgrounds);
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-function generateBackgroundMenu(backgroundImages) {
-    const menu = document.getElementById("backgroundMenu");
-    menu.innerHTML = "";
-
-    backgroundImages.forEach(image => {
-        const item = document.createElement("div");
-        item.className = "background-item";
-        item.innerHTML = `<img src="${image.src}" alt="${image.name}">`;
-        item.title = image.name;
-
-        item.addEventListener("click", () => setCanvasBackground(image.src));
-        menu.appendChild(item);
-    });
-}
-
-function setCanvasBackground(imageSrc) {
-    const image = new Image();
-    image.onload = function () {
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-    };
-    image.src = imageSrc;
-}
 }
 
     function createMenu() {
