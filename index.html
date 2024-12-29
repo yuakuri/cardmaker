@@ -180,11 +180,6 @@
             <input type="checkbox" id="showHP" onchange="toggleStatusDisplay(5)"> HP表示(リーダー用)
           </label>
         </p>
-        
-      <h4>背景画像</h4>
-        <input type="file" id="imageFile" accept="image/*">
-        <br>
-      <button onclick="readImage()">確定</button> <br>
       
       <h4>メイン画像</h4>
       <input type="file" id="upload" accept="image/*">
@@ -599,34 +594,43 @@ for (var i = 0; i < starsCount; i++) {
 
 }
 
-    function readExcel() {
-      var fileInput = document.getElementById('excelFile');
-      var file = fileInput.files[0];
-      var reader = new FileReader();
+// ページロード時に自動でExcelファイルを読み込む
+window.onload = function() {
+    readExcelAutomatically(); // 自動読み込みを実行
+};
 
-      reader.onload = function(e) {
-        var arrayBuffer = new Uint8Array(e.target.result);
-        var workbook = XLSX.read(arrayBuffer, { type: 'array' });
-        var sheetName = workbook.SheetNames[0];
-        var worksheet = workbook.Sheets[sheetName];
-        // エクセルデータをJSON形式に変換し、配列に格納
+// Excelファイルを自動で読み込む関数
+async function readExcelAutomatically() {
+    try {
+        const response = await fetch('assets/data.xlsx'); // Excelファイルのパス
+        if (!response.ok) {
+            throw new Error('Excelファイルの取得に失敗しました');
+        }
+
+        const arrayBuffer = await response.arrayBuffer(); // ファイルをArrayBufferとして読み込む
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' }); // XLSXで解析
+        const sheetName = workbook.SheetNames[0]; // 最初のシート名を取得
+        const worksheet = workbook.Sheets[sheetName];
+
+        // ExcelデータをJSON形式に変換
         data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        createMenu(); // 折りたたみメニューの生成を開始
-      };
 
-      reader.readAsArrayBuffer(file); // エクセルファイルを読み込む
-      resetMenu(); // メニューのリセット
-                          // ボタンを表示
-                          document.getElementById('ユニットButton').style.display = 'inline-block';
-                          document.getElementById('スキルButton').style.display = 'inline-block';
-                          document.getElementById('トラップButton').style.display = 'inline-block';
-                          document.getElementById('建物Button').style.display = 'inline-block';
-                          document.getElementById('武器Button').style.display = 'inline-block';
-                          document.getElementById('防具Button').style.display = 'inline-block';
-                          document.getElementById('リーダーButton').style.display = 'inline-block';
-                          document.getElementById('EXButton').style.display = 'inline-block';
-                
+        // メニューを作成
+        createMenu();
+
+        // ボタンの表示（必要に応じて）
+        document.getElementById('ユニットButton').style.display = 'inline-block';
+        document.getElementById('スキルButton').style.display = 'inline-block';
+        document.getElementById('トラップButton').style.display = 'inline-block';
+        document.getElementById('建物Button').style.display = 'inline-block';
+        document.getElementById('武器Button').style.display = 'inline-block';
+        document.getElementById('防具Button').style.display = 'inline-block';
+        document.getElementById('リーダーButton').style.display = 'inline-block';
+        document.getElementById('EXButton').style.display = 'inline-block';
+    } catch (error) {
+        console.error('Excelファイルの読み込みに失敗しました', error);
     }
+}
 
     function createMenu() {
   var container = document.getElementById('menuContainer');
