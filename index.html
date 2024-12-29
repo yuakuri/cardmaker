@@ -102,7 +102,7 @@
 <div class="container">
 
     <div id="croppie-container"></div>
-    <canvas id="canvas" width="630px" height="880px"></canvas>
+    <canvas id="canvas" width="630" height="880"></canvas>
     <div id="backgroundMenu"></div>
 
     <div>
@@ -558,8 +558,6 @@ window.onload = async function () {
     await Promise.all([fetchBackgrounds(), readExcelAutomatically()]);
     console.log("All data loaded.");
 };
-
-
 
 // Excelファイルを自動で読み込む関数
 async function readExcelAutomatically() {
