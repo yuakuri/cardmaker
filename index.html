@@ -805,50 +805,6 @@ function getCroppedImage() {
   });
 }
 
-async function fetchBackgrounds() {
-    try {
-        // サーバーから画像リストを取得
-        const response = await fetch('00_backgrounds.json');
-        if (!response.ok) {
-            throw new Error('画像リストの取得に失敗しました');
-        }
-        const backgrounds = await response.json();
-        generateBackgroundMenu(backgrounds); // メニュー生成関数を呼び出し
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-function generateBackgroundMenu(backgroundImages) {
-    const menu = document.getElementById("backgroundMenu");
-    menu.innerHTML = ""; // メニューを初期化
-
-    backgroundImages.forEach(image => {
-        const item = document.createElement("div");
-        item.className = "background-item";
-        item.innerHTML = `<img src="${image.src}" alt="${image.name}">`;
-        item.title = image.name;
-
-        // クリックでCanvasに背景を描画
-        item.addEventListener("click", () => setCanvasBackground(image.src));
-        menu.appendChild(item);
-    });
-}
-
-function setCanvasBackground(imageSrc) {
-    const image = new Image();
-    image.onload = function () {
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Canvasをクリア
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height); // 背景を描画
-    };
-    image.src = imageSrc;
-}
-
-// ページ読み込み時に背景画像リストを取得
-window.onload = fetchBackgrounds;
-
   </script>
 
 </div>
