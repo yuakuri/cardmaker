@@ -51,15 +51,12 @@ function setCanvasBackground(imageSrc) {
         // 背景画像を保存
         currentBackground = image;
         
-        // 画面クリア
+        // キャンバスをクリアして背景を描画
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
         
-        // 背景描画
-        ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
-        
-        
-        redrawCardElements();
-
+        // カードタイプを再描画
+        generateCardtype();
     };
     image.src = imageSrc;
 }
