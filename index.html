@@ -276,6 +276,8 @@ function generateCardtype() {
     if (currentBackground) {
         ctx.drawImage(currentBackground, 0, 0, canvas.width, canvas.height);
     }
+    redrawCardElements();
+
 
     // フォント設定（太字を追加）
     ctx.font = "bold 28px Noto Sans JP";
@@ -432,7 +434,7 @@ function generateImage() {
         ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
 
                 // テキストやその他の要素を描画
-        drawCardElements();
+                redrawCardElements();
 
         // 状態を復元
         ctx.restore();
