@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
   <!-- CroppieのCSSを追加 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css" />
 
@@ -277,13 +277,26 @@ function toggleCardType(cardType) {
   ctx.fill();
 }
 
- function generateCardtype() {
+function generateCardtype() {
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
     // フォント設定（太字を追加）
     ctx.font = "bold 28px Noto Sans JP";
 
+    // カードタイプごとの背景色を定義
+    const backgroundColors = {
+        "ユニット": "#ff5555",    // 赤
+        "スキル": "#5555ff",      // 青
+        "トラップ": "#800080",    // 紫
+        "建物": "#32cd32",       // 緑
+        "武器": "#ff9900",       // オレンジ
+        "防具": "#00ced1",       // 水色
+        "リーダー": "#ffcc00",   // 黄色
+        "EX": "#333333"          // 濃いグレー
+    };
+
+    // カードタイプに応じて描画
     for (const cardType in activeCardTypes) {
         if (activeCardTypes[cardType]) {
             // テキスト描画位置の調整
@@ -292,19 +305,21 @@ function toggleCardType(cardType) {
             const textX = (canvas.width - textWidth) / 2;
             const textY = 850;
 
+            // 背景色の設定（カードタイプに応じた色）
+            ctx.fillStyle = backgroundColors[cardType] || "#444444";  // デフォルトの色（なければグレー）
+
             // 背景の描画
-            ctx.fillStyle = '#444444';
             drawRoundedRect(ctx, textX - 10, textY - 28, textWidth + 20, 40, 10);
 
             // テキストの描画（白色）
             ctx.fillStyle = 'white';
             ctx.fillText(cardType, textX, textY);
-            
+
             break;
         }
     }
-
 }
+
 
   
 // 画像アップロード時にCroppieに画像を読み込むイベントリスナーを追加
