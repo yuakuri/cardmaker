@@ -491,8 +491,10 @@ function toggleMainImage() {
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
 
-      // 画像を描画
-      ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+       // 画像を描画
+       if (selectedImage) {
+            ctx.drawImage(selectedImage, 0, 0, canvasWidth, canvasHeight);
+        }
 
       // カード名のスタイルを設定
       ctx.font = '900 64px "Noto Sans JP", serif';
