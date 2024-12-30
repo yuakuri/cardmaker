@@ -450,7 +450,7 @@ function toggleMainImage() {
       ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
 
       // カード名のスタイルを設定
-      ctx.font = '900 64px "Poppins-black"';
+      ctx.font = '900 64px "Noto Sans JP", serif';
       ctx.fillStyle = 'white';
       ctx.lineWidth = 6;
       ctx.strokeText(text, 15, 60);
@@ -462,10 +462,10 @@ function toggleMainImage() {
       ctx.fillStyle = 'white';
       ctx.strokeStyle = 'red';
       if (document.getElementById("showATK").checked) {
-        ctx.font = '900 40px "Poppins-black"';
+        ctx.font = '900 40px "Noto Sans JP", serif';
         ctx.strokeText('ATK ', 30, 865);
         ctx.fillText('ATK ', 30, 865);
-        ctx.font = '900 64px "Poppins-black"';
+        ctx.font = '900 64px "Noto Sans JP", serif';
         ctx.strokeText(counterValue1, 130, 865);
         ctx.fillText(counterValue1, 130, 865);
       }
@@ -474,10 +474,10 @@ function toggleMainImage() {
       ctx.fillStyle = 'white';
       ctx.strokeStyle = 'green';
       if (document.getElementById("showDEF").checked) {
-        ctx.font = '900 40px "Poppins-black"';
+        ctx.font = '900 40px "Noto Sans JP", serif';
         ctx.strokeText('HP', 495, 865);
         ctx.fillText('HP', 495, 865);
-        ctx.font = '900 64px "Poppins-black"';
+        ctx.font = '900 64px "Noto Sans JP", serif';
         ctx.strokeText(counterValue2, 560, 865);
         ctx.fillText(counterValue2, 560, 865);
       }
@@ -486,16 +486,16 @@ function toggleMainImage() {
       ctx.fillStyle = 'white';
       ctx.strokeStyle = 'green';
       if (document.getElementById("showHP").checked) {
-        ctx.font = '900 40px "Poppins-black"';
+        ctx.font = '900 40px "Noto Sans JP", serif';
         ctx.strokeText('HP', 465, 865);
         ctx.fillText('HP', 465, 865);
-        ctx.font = '900 64px "Poppins-black"';
+        ctx.font = '900 64px "Noto Sans JP", serif';
         ctx.strokeText(counterValue5, 530, 865);
         ctx.fillText(counterValue5, 530, 865);
       }
 
       // COSTの値を描画
-ctx.font = '400 46px "Poppins-black"';
+ctx.font = '400 46px "Noto Sans JP", serif';
 ctx.fillStyle = 'yellow'; // 初期の★の色
 
 // コストが負の値にならないように確認
