@@ -3,9 +3,9 @@
 <head>
 
   <meta charset="UTF-8">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Kumar+One&family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
   <!-- CroppieのCSSを追加 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css" />
 
@@ -539,13 +539,13 @@ function toggleMainImage() {
         ctx.font = '900 40px "Noto Sans JP", serif';
         ctx.strokeText('HP', 465, 865);
         ctx.fillText('HP', 465, 865);
-        ctx.font = '900 64px "Noto Sans JP", serif';
+        ctx.font = '900 64px "Kumar One", serif';
         ctx.strokeText(counterValue5, 530, 865);
         ctx.fillText(counterValue5, 530, 865);
       }
 
       // COSTの値を描画
-ctx.font = '200 36px "Noto Sans JP", serif';
+ctx.font = '400 36px "Noto Sans JP", serif';
 ctx.fillStyle = 'yellow'; // 初期の★の色
 
 // コストが負の値にならないように確認
@@ -573,10 +573,7 @@ for (var i = 0; i < starsCount; i++) {
       // アクティブなボタンのテキストを描画
       ctx.font = '19px Noto Sans JP';
       ctx.fillStyle = 'Black';
-      ctx.strokeStyle = 'Black';
-      ctx.lineWidth = 0.5;
       for (var i = 0; i < activeButtons.length; i++) {
-        ctx.strokeText(activeButtons[i], 80, 645 + i * 30);
         ctx.fillText(activeButtons[i], 80, 645 + i * 30);
       }
 
