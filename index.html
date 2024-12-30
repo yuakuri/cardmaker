@@ -287,7 +287,7 @@ function generateCardtype() {
         "建物": "#32cd32",       // 緑
         "武器": "#ff9900",       // オレンジ
         "防具": "#00ced1",       // 水色
-        "リーダー": "#ffcc00",   // 黄色
+        "リーダー": "#ffff00",   // 黄色
         "EX": "#333333"          // 濃いグレー
     };
 
@@ -308,7 +308,9 @@ function generateCardtype() {
 
             // テキストの描画（白色）
             ctx.fillStyle = 'white';
+            ctx.strokeStyle = 'black';
             ctx.fillText(cardType, textX, textY);
+            ctx.strokeText(cardType, textX, textY);
 
             break;
         }
