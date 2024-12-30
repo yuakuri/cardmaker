@@ -307,10 +307,11 @@ function generateCardtype() {
             drawRoundedRect(ctx, textX - 10, textY - 28, textWidth + 20, 40, 10);
 
             // テキストの描画（白色）
-            ctx.fillStyle = 'white';
+            ctx.lineWidth = 4;
             ctx.strokeStyle = 'black';
-            ctx.fillText(cardType, textX, textY);
+            ctx.fillStyle = 'white';
             ctx.strokeText(cardType, textX, textY);
+            ctx.fillText(cardType, textX, textY);
 
             break;
         }
