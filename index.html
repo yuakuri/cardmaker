@@ -228,6 +228,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.2/xlsx.full.min.js"></script>
 
   <script>
+    document.addEventListener('DOMContentLoaded', function() {
 
 var cardTypeCosts = {
 　"ユニット": 0,
@@ -847,28 +848,20 @@ async function readExcelAutomatically() {
 const canvas = document.getElementById('myCanvas');
 const ctx = canvas.getContext('2d');
 
-// Saveボタンの取得
-const saveButton = document.getElementById('saveButton');
-
-// 画像保存処理
-saveButton.addEventListener('click', function() {
-    // Canvasの内容をData URLに変換（PNG形式）
-    const imageUrl = canvas.toDataURL('image/png');
-
-    // 仮想的なリンクを作成
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = 'card.png'; // 保存するファイル名
-
-    // リンクをクリックして画像を保存
-    link.click();
-});
+    // savecanvasimage関数の定義
+    window.savecanvasimage = function() {
+        const imageUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = 'original-card.png';
+        link.click();
+    }
 
   }
   
   window.onload = readExcelAutomatically();
 
-
+});
   </script>
 
 </div>
