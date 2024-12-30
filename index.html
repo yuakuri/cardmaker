@@ -106,10 +106,11 @@
     <canvas id="canvas" width="630px" height="880px"></canvas>
 
     <div>
-      <button id="saveButton">カード画像の保存</button>
+      <button onclick="savecanvasimage()">カード画像の保存</button>
         <label for="text-input">カード名入力:</label>
         <input type="text" id="text-input">
-        <button onclick="generateImage(),getCroppedImage(), generateCardtype();;">確定</button>
+        <button onclick="generateImage(); getCroppedImage(); generateCardtype();">確定</button>
+
 
         <h3>ステータスの操作</h3>
         <p>
@@ -857,7 +858,7 @@ saveButton.addEventListener('click', function() {
     // 仮想的なリンクを作成
     const link = document.createElement('a');
     link.href = imageUrl;
-    link.download = 'canvas-image.png'; // 保存するファイル名
+    link.download = 'card.png'; // 保存するファイル名
 
     // リンクをクリックして画像を保存
     link.click();
