@@ -106,6 +106,7 @@
     <canvas id="canvas" width="630px" height="880px"></canvas>
 
     <div>
+      <button id="saveButton">カード画像の保存</button>
         <label for="text-input">カード名入力:</label>
         <input type="text" id="text-input">
         <button onclick="generateImage(),getCroppedImage(), generateCardtype();;">確定</button>
@@ -838,6 +839,30 @@ async function readExcelAutomatically() {
               reject(error); // 失敗時にエラーを返す
           }
       });
+  }
+
+  function savecanvasimage(){
+    // Canvasの取得
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+
+// Saveボタンの取得
+const saveButton = document.getElementById('saveButton');
+
+// 画像保存処理
+saveButton.addEventListener('click', function() {
+    // Canvasの内容をData URLに変換（PNG形式）
+    const imageUrl = canvas.toDataURL('image/png');
+
+    // 仮想的なリンクを作成
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = 'canvas-image.png'; // 保存するファイル名
+
+    // リンクをクリックして画像を保存
+    link.click();
+});
+
   }
   
   window.onload = readExcelAutomatically();
