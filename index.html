@@ -57,48 +57,76 @@
   font-weight: bold; /* 強調 */
   font-size: 16px; /* フォントサイズ */
 }
+
+
+#ユニットButton {
+            display: none; /* 初期状態では非表示 */
+            margin-top: 10px;
+        }
+        #スキルButton {
+            display: none; /* 初期状態では非表示 */
+            margin-top: 10px;
+        }
+        #トラップButton {
+            display: none; /* 初期状態では非表示 */
+            margin-top: 10px;
+        }
+        #建物Button {
+            display: none; /* 初期状態では非表示 */
+            margin-top: 10px;
+        }
+        #武器Button {
+            display: none; /* 初期状態では非表示 */
+            margin-top: 10px;
+        }
+        #防具Button {
+            display: none; /* 初期状態では非表示 */
+            margin-top: 10px;
+        }
+        #リーダーButton {
+            display: none; /* 初期状態では非表示 */
+            margin-top: 10px;
+        }
+        #EXButton {
+            display: none; /* 初期状態では非表示 */
+            margin-top: 10px;
+        }
         
         button.active {
   background-color: yellow;
   color: black; /* テキストが見やすいようにする */
 }
 
-#backgroundMenu {
-    display: grid; /* グリッドレイアウトを使用 */
-    grid-template-columns: repeat(3, 1fr); /* 3列に設定 */
-    gap: 10px; /* 要素間のスペース */
-    margin-bottom: 10px; /* 下部余白 */
-}
+    #backgroundMenu {
+        display: flex;
+        flex-wrap: wrap; /* 要素を折り返して表示 */
+        gap: 10px; /* アイテム間のスペース */
+        margin-bottom: 20px; /* 下部余白 */
+    }
 
-.background-item {
-    width: 50px;
-    height: 50px;
-    cursor: pointer;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: transform 0.2s;
-}
+    .background-item {
+        width: 100px;
+        height: 100px;
+        cursor: pointer;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: transform 0.2s;
+    }
 
-.background-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
+    .background-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 
-.background-item:hover {
-    transform: scale(1.1);
-    border-color: blue;
-}
-
-.background-item.selected {
-    border: 2px solid blue;
-    background-color: #e0e0e0;
-}
-
+    .background-item:hover {
+        transform: scale(1.1);
+        border-color: #007bff;
+    }
 
   </style>
 </head>
@@ -108,8 +136,8 @@
 <div class="container">
 
     <div id="croppie-container"></div>
-    <canvas id="canvas" width="630" height="880"></canvas>
-    <div id="backgroundMenu"></div>
+
+    <canvas id="canvas" width="630px" height="880px"></canvas>
 
     <div>
         <label for="text-input">カード名入力:</label>
@@ -151,11 +179,22 @@
             <input type="checkbox" id="showHP" onchange="toggleStatusDisplay(5)"> HP表示(リーダー用)
           </label>
         </p>
+        
+      <h4>背景画像</h4>
+        <input type="file" id="imageFile" accept="image/*">
+        <br>
+      <button onclick="readImage()">確定</button> <br>
       
       <h4>メイン画像</h4>
       <input type="file" id="upload" accept="image/*">
       <br>
           <button onclick="getCroppedImage()">トリミング確定</button>  
+      
+      <h4>Excelデータ</h4>
+        <input type="file" id="excelFile" accept=".xlsx">
+        <br>
+        <button onclick="readExcel()">確定</button>
+      
         <br>
       
         <button id="ユニットButton" onclick="toggleCardType('ユニット')">ユニット</button>
@@ -164,7 +203,9 @@
         <button id="建物Button" onclick="toggleCardType('建物')">建物</button>
         <button id="武器Button" onclick="toggleCardType('武器')">武器</button>
         <button id="防具Button" onclick="toggleCardType('防具')">防具</button>
-        <button id="リーダーButton" onclick="toggleCardType('リーダー')">リーダー</button> 
+        <button id="リーダーButton" onclick="toggleCardType('リーダー')">リーダー</button>
+
+        <!-- 他のカードタイプのボタンも同様に追加 -->  
       
         <div id="menuContainer"></div>
       
@@ -191,45 +232,54 @@ var cardTypeCosts = {
 var activeCardTypes = {}; // アクティブなカードタイプを追跡するオブジェクト
 
 function toggleCardType(cardType) {
-    const buttonId = cardType + "Button";
-    const button = document.getElementById(buttonId);
+  var buttonId = cardType + "Button"; // ボタンのIDを生成（例: "unitButton"）
+  var button = document.getElementById(buttonId);
 
-    if (!button) {
-        console.error("Button not found: " + buttonId);
-        return;
+  if (!button) {
+    console.error("Button not found: " + buttonId);
+    return;
+  }
+
+  var isActive = activeCardTypes[cardType];
+  var cardCost = cardTypeCosts[cardType];
+
+   // 既にアクティブなカードタイプがあるかチェック
+   var alreadyActive = false;
+  for (var type in activeCardTypes) {
+    if (activeCardTypes[type]) {
+      alreadyActive = true;
+      break;
     }
+  }
 
-    const isActive = activeCardTypes[cardType];
-    const cardCost = cardTypeCosts[cardType];
+  // 既にアクティブなカードタイプがある場合はエラーメッセージを表示
+  if (alreadyActive && !activeCardTypes[cardType]) {
+    alert("他のカードタイプが既に選択されています。");
+    return;
+  }
 
-    // 他のカードタイプが選択されているかチェック
-    const otherTypeActive = Object.entries(activeCardTypes)
-        .some(([type, active]) => type !== cardType && active);
+  // 選択されたカードタイプをアクティブにし、関連するボタンのスタイルを更新
+  activeCardTypes[cardType] = true;
+  button.classList.add("active");
 
-    // 他のタイプが選択済みで、このタイプが非アクティブの場合
-    if (otherTypeActive && !isActive) {
-        alert("他のカードタイプが既に選択されています。");
-        return;
-    }
+  if (isActive) {
+    // アクティブな場合の処理
+    counterValue6 = -cardCost;
+    activeCardTypes[cardType] = false;
+    button.classList.remove("active");
+  } else {
+    // 非アクティブな場合の処理
+    counterValue6 = cardCost;
+    activeCardTypes[cardType] = true;
+    button.classList.add("active");
+  }
 
-    // トグル処理
-    if (isActive) {
-        counterValue6 = -cardCost;
-        activeCardTypes[cardType] = false;
-        button.classList.remove("active");
-    } else {
-        counterValue6 = cardCost;
-        activeCardTypes[cardType] = true;
-        button.classList.add("active");
-    }
-
-    // 更新処理
-    updateResult(counterValue6);
-    generateImage();
-    generateCardtype();
-    getCroppedImage();
+  // 画像を再生成する関数など、必要に応じて追加の処理を行う
+  updateResult(counterValue6); // 効果COSTを更新
+  generateImage();
+  generateCardtype();
+  getCroppedImage();
 }
-
 
     var secondImg;
 
@@ -261,13 +311,9 @@ function toggleCardType(cardType) {
   ctx.fill();
 }
 
-function generateCardtype() {
+ function generateCardtype() {
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-
-    // デバッグ用：現在の状態確認
-    console.log('Drawing cardtype, currentBackground:', currentBackground);
-    console.log('Active card types:', activeCardTypes);
 
     // 画面をクリア
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -299,6 +345,12 @@ function generateCardtype() {
             break;
         }
     }
+
+
+  if (!activeCardTypeFound) {
+    // アクティブなカードタイプがない場合の処理
+
+  }
 }
 
   
@@ -411,33 +463,27 @@ function toggleMainImage() {
   getCroppedImage();
 }
 
-function generateImage() {
-  const text = document.getElementById('text-input').value;
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
+    function generateImage() {
+      var text = document.getElementById('text-input').value;
 
-    const imageWidth = 630;
-    const imageHeight = 880;
-    const canvasWidth = 630;
-    const canvasHeight = 880;
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
 
-    // キャンバスのサイズを設定
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
+      var imageWidth = 630;  // 画像の幅（ピクセル）
+      var imageHeight = 880; // 画像の高さ（ピクセル）
+      var canvasWidth = 630; // Canvasの幅（ピクセル）
+      var canvasHeight = 880; // Canvasの高さ（ピクセル）
 
-    // 背景がある場合は描画
-    if (currentBackground) {
-        ctx.drawImage(currentBackground, 0, 0, canvasWidth, canvasHeight);
-    }
+      // 画像の比率を計算
+      var widthRatio = canvasWidth / imageWidth;
+      var heightRatio = canvasHeight / imageHeight;
 
-    // カード要素を描画
-    drawCardElements();
-  }
+      // Canvasのサイズを変更
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
 
-    function drawCardElements() {
-
-      const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
+      // 画像を描画
+      ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
 
       // カード名のスタイルを設定
       ctx.font = '900 64px "Poppins-black"';
@@ -550,6 +596,35 @@ for (var i = 0; i < starsCount; i++) {
       container.innerHTML = '';
 
 }
+
+    function readExcel() {
+      var fileInput = document.getElementById('excelFile');
+      var file = fileInput.files[0];
+      var reader = new FileReader();
+
+      reader.onload = function(e) {
+        var arrayBuffer = new Uint8Array(e.target.result);
+        var workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        var sheetName = workbook.SheetNames[0];
+        var worksheet = workbook.Sheets[sheetName];
+        // エクセルデータをJSON形式に変換し、配列に格納
+        data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        createMenu(); // 折りたたみメニューの生成を開始
+      };
+
+      reader.readAsArrayBuffer(file); // エクセルファイルを読み込む
+      resetMenu(); // メニューのリセット
+                          // ボタンを表示
+                          document.getElementById('ユニットButton').style.display = 'inline-block';
+                          document.getElementById('スキルButton').style.display = 'inline-block';
+                          document.getElementById('トラップButton').style.display = 'inline-block';
+                          document.getElementById('建物Button').style.display = 'inline-block';
+                          document.getElementById('武器Button').style.display = 'inline-block';
+                          document.getElementById('防具Button').style.display = 'inline-block';
+                          document.getElementById('リーダーButton').style.display = 'inline-block';
+                          document.getElementById('EXButton').style.display = 'inline-block';
+                
+    }
 
     function createMenu() {
   var container = document.getElementById('menuContainer');
@@ -727,11 +802,37 @@ function getCroppedImage() {
   });
 }
 
+// Excelファイルを自動で読み込む関数
+async function readExcelAutomatically() {
+    return new Promise(async (resolve, reject) => {
+          try {
+              const response = await fetch('assets/data.xlsx');
+              if (!response.ok) {
+                  throw new Error('Excelファイルの取得に失敗しました');
+              }
+  
+              const arrayBuffer = await response.arrayBuffer();
+              const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+              const sheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[sheetName];
+  
+              data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  
+              createMenu(); // メニュー生成
+              resolve(); // 成功時に解決
+          } catch (error) {
+              console.error('Excelファイルの読み込みに失敗しました', error);
+              reject(error); // 失敗時にエラーを返す
+          }
+      });
+  }
+  
+  window.onload = readExcelAutomatically();
+
+
   </script>
 
 </div>
-
-<script src="scripts/backgroundMenu.js"></script>
+  
 </body>
-
 </html>
