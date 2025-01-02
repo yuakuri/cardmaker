@@ -11,45 +11,99 @@
 
   <style>
 
-    /* Croppie領域のスタイルをキャンバスに合わせて調整 */
+.card-editor-container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    width: 100%;
+}
+
+/* プレビュー領域（canvas） */
+.preview-container {
+    flex: 1;
+    border: 2px solid #ccc;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 630px;
+    max-height: 880px;
+    min-width: 63px;
+    min-height: 88px;
+    aspect-ratio: 63 / 88;
+    margin: 0 auto;
+    z-index: 10;
+}
+
+/* 操作パネル領域 */
+.control-panel {
+    flex: 0 0 auto;
+    width: 480px;
+}
+
+#croppie-container {
+  flex: 1;
+    border: 2px solid #ccc;
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 480px;
+    max-height: 480px;
+    min-width: 48px;
+    min-height: 48px;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+    z-index: 10;
+}
+
+/* スマートフォン向けの調整 */
+@media (max-width: 480px) {
     #croppie-container {
-      border: 2px solid #ccc;
-      position: sticky;
-      top: 10px;
-      width: 480px;
-      height: 480px;
-      z-index: 10; /* キャンバスを前面に表示 */
+        width: 90vw;
+        height: 90vw;
     }
+}
 
-    #canvas {
-      border: 2px solid #ccc;
-      position: sticky;
-      top: 10px;
-      width: 315px;
-      height: 440px;
-      z-index: 10; /* キャンバスを前面に表示 */
+.canvas-container {
+    border: 2px solid #ccc;
+    position: relative;
+    width: 100%;
+    max-width: 630px;
+    max-height: 880px;
+    aspect-ratio: 1 / 1;
+    max-height: 880px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* PC向けグリッドレイアウト */
+@media (min-width: 900px) {
+  .card-editor-container {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+    .card-editor-container {
+        flex-direction: column;
     }
-
-    .container {
-            display: flex; /* Flexboxを有効化 */
-            gap: 10px; /* 要素間のスペース */
-
-        }
+    
+    .control-panel {
+        width: 100%;
+    }
+}
 
     .box {
          border: 1px solid black;
          padding: 10px;
       }
-
-      .mybutton {
-    background-color: #f0f0f0;
-    border: 2px solid #a5a5a5;
-}
-
-    .changed {
-    background-color: #3fb811;
-    border: 2px solid #ccc;
-}
 
 .category-header {
   margin-top: 10px; /* 上部余白 */
@@ -58,9 +112,52 @@
   font-size: 16px; /* フォントサイズ */
 }
         
-        button.active {
-  background-color: yellow;
-  color: black; /* テキストが見やすいようにする */
+.button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+/* スマートフォン向けの大きなボタン */
+@media (max-width: 899px) {
+  .button {
+    min-height: 48px;
+    padding: 16px;
+    font-size: 16px;
+  }
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 900px) {
+  .main-content {
+    flex-direction: row;
+  }
+  
+  .preview-area {
+    flex: 2;
+  }
+  
+  .control-area {
+    flex: 1;
+  }
+}
+
+.interactive-element {
+  margin: 8px 0;
+}
+
+@media (max-width: 899px) {
+  .interactive-element {
+    margin: 16px 0;
+  }
+  
+  .interactive-element:active {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
 }
 
 #background-menu {
@@ -99,11 +196,14 @@
 
 <body>
 
-<div class="container">
+    <div class="card-editor-container">
 
-    <div id="croppie-container"></div>
-
-    <canvas id="canvas" width="630px" height="880px"></canvas>
+        <div class="preview-container">
+    <canvas id="canvas"></canvas>
+        </div>
+        <div class="control-panel">
+            <div id="croppie-container"></div>
+                </div>
 
     <div>
       <button onclick="savecanvasimage()">カード画像の保存</button> <br>
@@ -291,8 +391,6 @@ function toggleCardType(cardType) {
   getCroppedImage();
 }
 
-    var secondImg;
-
       // Croppieの初期化
   var croppieInstance = new Croppie(document.getElementById('croppie-container'), {
     viewport: {
@@ -324,6 +422,18 @@ function toggleCardType(cardType) {
 function generateCardtype() {
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
+
+// 元の高解像度を保持
+const originalWidth = 630;  // 希望する描画バッファサイズ
+const originalHeight = 880;
+
+// 描画バッファのサイズを設定
+canvas.width = originalWidth;
+canvas.height = originalHeight;
+
+// 表示サイズをCSSで制御
+canvas.style.width = '100%';
+canvas.style.height = 'auto';
 
     // フォント設定（太字を追加）
     ctx.font = "bold 28px Noto Sans JP";
@@ -407,25 +517,6 @@ document.getElementById('upload').addEventListener('change', function() {
   reader.readAsDataURL(file);
 }
 
-function readSecondImage() {
-  var fileInput = document.getElementById('secondImageFile');
-  var file = fileInput.files[0];
-  var reader = new FileReader();
-
-  reader.onload = function(e) {
-    secondImg = new Image(); // secondImg を新しい Image オブジェクトとして再宣言
-    secondImg.onload = function() {
-      // 画像が完全にロードされた後で generateImage を呼び出す
-      generateImage(); // 画像を再生成
-      generateCardtype();
-      getCroppedImage();
-    };
-    secondImg.src = e.target.result; // ここで画像のデータが secondImg に読み込まれる
-  };
-
-  reader.readAsDataURL(file);
-}
-
 function toggleStatusDisplay(group) {
   var checkbox;
   if (group === 1) {
@@ -448,7 +539,7 @@ function toggleStatusDisplay(group) {
   if (checkbox.checked) {
     statusElement.style.display = "inline"; // チェックが入っている場合は表示
   } else {
-    statusElement.style.display = "-"; // チェックが外れている場合は非表示
+    statusElement.style.display = "none"; // チェックが外れている場合は非表示
   }
 
   generateImage(); // 画像を再生成
@@ -465,17 +556,7 @@ function toggleStatusDisplay(group) {
     var counterValue6 = 0; // カードタイプのカウンターの初期値
     var activeButtons = []; // アクティブなボタンのテキストを格納する配列
 
-    var mainImageVisible = true; // メイン画像の表示状態を管理する変数
-
-function toggleMainImage() {
-  mainImageVisible = !mainImageVisible; // 表示状態を切り替える
-
-  generateImage(); // 画像を再生成
-  generateCardtype();
-  getCroppedImage();
-}
-
-    function generateImage() {
+function generateImage() {
       var text = document.getElementById('text-input').value;
 
     var canvas = document.getElementById('canvas');
@@ -494,7 +575,7 @@ function toggleMainImage() {
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
 
-       // 画像を描画
+       // フレーム画像を描画
        if (selectedImage) {
             ctx.drawImage(selectedImage, 0, 0, canvasWidth, canvasHeight);
         }
@@ -576,14 +657,6 @@ for (var i = 0; i < starsCount; i++) {
       for (var i = 0; i < activeButtons.length; i++) {
         ctx.fillText(activeButtons[i], 80, 645 + i * 30);
       }
-
-  // メイン画像を描画
-  if (mainImageVisible) {
-    if (secondImg && secondImg.complete) {
-    
-    ctx.drawImage(secondImg, 0, 0);
-    }
-  }
 
       // 生成された画像のデータURLを取得
       var dataURL = canvas.toDataURL();
@@ -795,22 +868,45 @@ function toggleValue(event) {
     }
 
 function getCroppedImage() {
-  croppieInstance.result({
-    type: 'canvas', // または 'base64', 'html', 'blob', 'rawcanvas' など
-    size: 'viewport' // または 'original' または { width: value, height: value }
-  }).then(function (resp) {
-    // ここで得られた画像データ（resp）を使用する
-    // 例えば、キャンバスに描画する場合：
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
-    var img = new Image();
-    img.onload = function() {
-      ctx.drawImage(img, 75, 118, 480, 480); // 描画する位置を調整してください
-    };
-    img.src = resp; // respは、typeに応じてCanvas、Base64、Blobなどになる
-  }).catch(function (error) {
-    console.error('Croppieのresultの取得に失敗しました', error);
-  });
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+// 元の高解像度を保持
+const originalWidth = 630;  // 希望する描画バッファサイズ
+const originalHeight = 880;
+
+// 描画バッファのサイズを設定
+canvas.width = originalWidth;
+canvas.height = originalHeight;
+
+// 表示サイズをCSSで制御
+canvas.style.width = '100%';
+canvas.style.height = 'auto';
+
+    // Scaleの設定 (1.0はデフォルト値として設定)
+    const scale = 1.0;
+
+    // クロップ画像の描画位置とサイズ
+    const viewportWidth = originalWidth * 0.73;  // キャンバスの73%サイズ
+    const viewportHeight = originalWidth;      // 正方形のビューポート
+    const croppieX = (originalWidth - viewportWidth) / 2; // 中央配置のX位置
+    const croppieY = (originalHeight - viewportHeight) / 2; // 中央配置のY位置
+
+    // Croppieから画像を取得
+    croppieInstance.result({
+        type: 'canvas', // 'base64', 'blob', 'rawcanvas' なども使用可
+        format: 'png',
+        quality: 1.0 // 最高品質
+    }).then(function (resp) {
+        // 描画する画像をロード
+        const img= new Image();
+        img.onload = function () {
+            // キャンバスに描画
+            ctx.drawImage(img, croppieX, croppieY, viewportWidth, viewportWidth);
+        };
+        img.src = resp;
+    }).catch(function (error) {
+        console.error('Croppieのresultの取得に失敗しました', error);
+    });
 }
 
 // Excelファイルを自動で読み込む関数
