@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+
+  <meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kumar+One&family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
+  <!-- CroppieのCSSを追加 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.css" />
+
+  <style>
+
+.card-editor-container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    width: 100%;
+}
+
+/* プレビュー領域（canvas） */
+.preview-container {
+    flex: 1;
+    border: 2px solid #ccc;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 630px;
+    max-height: 880px;
+    min-width: 63px;
+    min-height: 88px;
+    aspect-ratio: 63 / 88;
+    margin: 0 auto;
+    z-index: 10;
+}
+
+/* 操作パネル領域 */
+.control-panel {
+    flex: 0 0 auto;
+    width: 480px;
+}
+
+#croppie-container {
+  flex: 1;
+    border: 2px solid #ccc;
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 480px;
+    max-height: 480px;
+    min-width: 48px;
+    min-height: 48px;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+    z-index: 10;
+}
+
+/* スマートフォン向けの調整 */
+@media (max-width: 480px) {
+    #croppie-container {
+        width: 90vw;
+        height: 90vw;
+    }
+}
+
+.canvas-container {
+    border: 2px solid #ccc;
+    position: relative;
+    width: 100%;
+    max-width: 630px;
+    max-height: 880px;
+    aspect-ratio: 1 / 1;
+    max-height: 880px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* PC向けグリッドレイアウト */
+@media (min-width: 900px) {
+  .card-editor-container {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+    .card-editor-container {
+        flex-direction: column;
+    }
+    
+    .control-panel {
+        width: 100%;
+    }
+}
+
+    .box {
+         border: 1px solid black;
+         padding: 10px;
+      }
+
+.category-header {
+  margin-top: 10px; /* 上部余白 */
+  margin-bottom: 5px; /* 下部余白 */
+  font-weight: bold; /* 強調 */
+  font-size: 16px; /* フォントサイズ */
+}
+        
+.button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+/* スマートフォン向けの大きなボタン */
+@media (max-width: 899px) {
+  .button {
+    min-height: 48px;
+    padding: 16px;
+    font-size: 16px;
+  }
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 900px) {
+  .main-content {
+    flex-direction: row;
+  }
+  
+  .preview-area {
+    flex: 2;
+  }
+  
+  .control-area {
+    flex: 1;
+  }
+}
+
+.interactive-element {
+  margin: 8px 0;
+}
+
+@media (max-width: 899px) {
+  .interactive-element {
+    margin: 16px 0;
+  }
+  
+  .interactive-element:active {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+}
+
+#background-menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: scroll;
+            z-index: 11;
+        }
+        .thumbnail {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            margin: 5px;
+            cursor: pointer;
+          　z-index: 12;
+        }
+        #menu-toggle {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+  </style>
+</head>
+
+<body>
+
+    <div class="card-editor-container">
+
+        <div class="preview-container">
+    <canvas id="canvas"></canvas>
+        </div>
+        <div class="control-panel">
+            <div id="croppie-container"></div>
+                </div>
+
+    <div>
+      <button onclick="savecanvasimage()">カード画像の保存</button> <br>
+        <label for="text-input">カード名入力:</label>
+        <input type="text" id="text-input">
+        <button onclick="generateImage(); getCroppedImage(); generateCardtype();">確定</button>
+
+
+        <h3>ステータスの操作</h3>
+        <p>
+          <span>ATK: </span>
+          <span id="counter1">2</span>
+        </p>
+        <p>
+          <span>HP: </span>
+          <span id="counter2">2</span>
+        </p>
+        <p>
+          <span>コスト: </span>
+          <span id="counter3">0</span>
+        </p>
+        <p>
+          <span>HP(リーダー用): </span>
+          <span id="counter5">20</span>
+        </p>
+      
+        <button onclick="increment(1)">ATK+1</button>
+        <button onclick="decrement(1)">ATK-1</button>
+      
+        <button onclick="increment(2)">HP+1</button>
+        <button onclick="decrement(2)">HP-1</button>
+      
+        <p>
+          <label>
+            <input type="checkbox" id="showATK" onchange="toggleStatusDisplay(1)"> ATK表示
+          </label>
+          <label>
+            <input type="checkbox" id="showDEF" onchange="toggleStatusDisplay(2)"> HP表示
+          </label>
+          <label>
+            <input type="checkbox" id="showHP" onchange="toggleStatusDisplay(5)"> HP表示(リーダー用)
+          </label>
+        </p>
+        
+        <button id="menu-toggle">フレーム画像を選択</button>
+        <div id="background-menu"></div>
+    
+        <script>
+            // GitHubのraw URLをここに指定します
+            const jsonFileUrl = 'assets/00_backgrounds.json';
+    
+            // メニュー表示ボタンと背景メニューの取得
+            const menuToggleButton = document.getElementById('menu-toggle');
+            const backgroundMenu = document.getElementById('background-menu');
+
+            let selectedImage = null;
+
+        // メニュー表示/非表示を切り替え
+        menuToggleButton.addEventListener('click', () => {
+            backgroundMenu.style.display = backgroundMenu.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // 背景画像リストを読み込む
+        fetch(jsonFileUrl)
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(item => {
+                    const imgElement = document.createElement('img');
+                    imgElement.src = item.src;
+                    imgElement.alt = item.name;
+                    imgElement.classList.add('thumbnail');
+                    imgElement.title = item.name;
+
+                    // 画像クリック時に背景画像を設定
+                    imgElement.addEventListener('click', () => {
+                        selectedImage = new Image(); // 新しい画像インスタンスを作成
+                        selectedImage.src = item.src;
+                        generateImage();
+                        generateCardtype();
+                        getCroppedImage();
+              
+                    // メニューを閉じる（任意）
+                    backgroundMenu.style.display = 'none';
+                    });
+
+                    backgroundMenu.appendChild(imgElement);
+                });
+            })
+   
+            
+
+                .catch(error => {
+                    console.error('画像リストの読み込みに失敗しました:', error);
+                });
+        </script>
+      
+      <h4>メイン画像</h4>
+      <input type="file" id="upload" accept="image/*">
+      <br>
+          <button onclick="getCroppedImage()">トリミング確定</button>  
+      
+        <br>
+      
+        <h4>カードタイプ</h4>
+        <button id="ユニットButton" onclick="toggleCardType('ユニット')">ユニット</button>
+        <button id="スキルButton" onclick="toggleCardType('スキル')">スキル</button>
+        <button id="トラップButton" onclick="toggleCardType('トラップ')">トラップ</button>
+        <button id="建物Button" onclick="toggleCardType('建物')">建物</button>
+        <button id="武器Button" onclick="toggleCardType('武器')">武器</button>
+        <button id="防具Button" onclick="toggleCardType('防具')">防具</button>
+        <button id="リーダーButton" onclick="toggleCardType('リーダー')">リーダー</button>
+
+        <!-- 他のカードタイプのボタンも同様に追加 -->  
+      
+        <div id="menuContainer"></div>
+      
+        <h4>効果コスト: <span id="result">0</span></h4>
+      </div>
+    </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/croppie/2.6.5/croppie.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.2/xlsx.full.min.js"></script>
+
+  <script>
+var cardTypeCosts = {
+　"ユニット": 0,
+  "スキル": -1,
+  "トラップ": 0,
+  "建物": 1,
+  "武器": 0,
+  "防具": 1,
+  "リーダー": 0,
+  "EX":1,
+};
+
+var activeCardTypes = {}; // アクティブなカードタイプを追跡するオブジェクト
+
+function toggleCardType(cardType) {
+  var buttonId = cardType + "Button"; // ボタンのIDを生成（例: "unitButton"）
+  var button = document.getElementById(buttonId);
+
+  if (!button) {
+    console.error("Button not found: " + buttonId);
+    return;
+  }
+
+  var isActive = activeCardTypes[cardType];
+  var cardCost = cardTypeCosts[cardType];
+
+   // 既にアクティブなカードタイプがあるかチェック
+   var alreadyActive = false;
+  for (var type in activeCardTypes) {
+    if (activeCardTypes[type]) {
+      alreadyActive = true;
+      break;
+    }
+  }
+
+  // 既にアクティブなカードタイプがある場合はエラーメッセージを表示
+  if (alreadyActive && !activeCardTypes[cardType]) {
+    alert("他のカードタイプが既に選択されています。");
+    return;
+  }
+
+  // 選択されたカードタイプをアクティブにし、関連するボタンのスタイルを更新
+  activeCardTypes[cardType] = true;
+  button.classList.add("active");
+
+  if (isActive) {
+    // アクティブな場合の処理
+    counterValue6 = -cardCost;
+    activeCardTypes[cardType] = false;
+    button.classList.remove("active");
+  } else {
+    // 非アクティブな場合の処理
+    counterValue6 = cardCost;
+    activeCardTypes[cardType] = true;
+    button.classList.add("active");
+  }
+
+  // 画像を再生成する関数など、必要に応じて追加の処理を行う
+  updateResult(counterValue6); // 効果COSTを更新
+  generateImage();
+  generateCardtype();
+  getCroppedImage();
+}
+
+      // Croppieの初期化
+  var croppieInstance = new Croppie(document.getElementById('croppie-container'), {
+    viewport: {
+      width: 480, /* 赤い四角のサイズに合わせる */
+      height: 480, /* 赤い四角のサイズに合わせる */
+      type: 'square' /* 'square'に変更して赤い四角に合わせる */
+    },
+    boundary: {
+      width: 480, /* 赤い四角のサイズに合わせる */
+      height: 480 /* 赤い四角のサイズに合わせる */
+    }
+  });
+
+  function drawRoundedRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.arcTo(x + width, y, x + width, y + radius, radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+  ctx.lineTo(x + radius, y + height);
+  ctx.arcTo(x, y + height, x, y + height - radius, radius);
+  ctx.lineTo(x, y + radius);
+  ctx.arcTo(x, y, x + radius, y, radius);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function generateCardtype() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+// 元の高解像度を保持
+const originalWidth = 630;  // 希望する描画バッファサイズ
+const originalHeight = 880;
+
+// 描画バッファのサイズを設定
+canvas.width = originalWidth;
+canvas.height = originalHeight;
+
+// 表示サイズをCSSで制御
+canvas.style.width = '100%';
+canvas.style.height = 'auto';
+
+    // フォント設定（太字を追加）
+    ctx.font = "bold 28px Noto Sans JP";
+
+    // カードタイプごとの背景色を定義
+    const backgroundColors = {
+        "ユニット": "#ff5555",    // 赤
+        "スキル": "#5555ff",      // 青
+        "トラップ": "#800080",    // 紫
+        "建物": "#32cd32",       // 緑
+        "武器": "#ff9900",       // オレンジ
+        "防具": "#00ced1",       // 水色
+        "リーダー": "#333333",   // 黄色
+        "EX": "#333333"          // 濃いグレー
+    };
+
+    // カードタイプに応じて描画
+    for (const cardType in activeCardTypes) {
+        if (activeCardTypes[cardType]) {
+            // テキスト描画位置の調整
+            const textMetrics = ctx.measureText(cardType);
+            const textWidth = textMetrics.width;
+            const textX = (canvas.width - textWidth) / 2;
+            const textY = 850;
+
+            // 背景色の設定（カードタイプに応じた色）
+            ctx.fillStyle = backgroundColors[cardType] || "#444444";  // デフォルトの色（なければグレー）
+
+            // 背景の描画
+            drawRoundedRect(ctx, textX - 10, textY - 28, textWidth + 20, 40, 10);
+
+            // テキストの描画（白色）
+            ctx.fillStyle = 'white';
+            ctx.fillText(cardType, textX, textY);
+
+            break;
+        }
+    }
+}
+
+
+  
+// 画像アップロード時にCroppieに画像を読み込むイベントリスナーを追加
+document.getElementById('upload').addEventListener('change', function() {
+  if (this.files && this.files[0]) {
+    var reader = new FileReader();
+    
+    reader.onload = function(e) {
+      // Croppieに画像をバインド
+      croppieInstance.bind({
+        url: e.target.result
+      });
+    };
+    
+    reader.readAsDataURL(this.files[0]);
+  }
+});
+
+    var img = new Image();
+    img.onload = function() {
+      generateImage(); // 初期画像を生成
+      generateCardtype();
+      getCroppedImage();
+    };
+    function readImage() {
+  var fileInput = document.getElementById('imageFile');
+  var file = fileInput.files[0];
+  var reader = new FileReader();
+
+  reader.onload = function(e) {
+    var image = new Image();
+    image.onload = function() {
+      img = image; // グローバル変数のimgに読み込んだ画像をセット
+      generateImage(); // 画像を再生成
+      generateCardtype();
+      getCroppedImage();
+    };
+    image.src = e.target.result;
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function toggleStatusDisplay(group) {
+  var checkbox;
+  if (group === 1) {
+    checkbox = document.getElementById("showATK");
+  } else if (group === 2) {
+    checkbox = document.getElementById("showDEF");
+  } else if (group === 5) {
+    checkbox = document.getElementById("showHP");
+  }
+
+  var statusElement;
+  if (group === 1) {
+    statusElement = document.getElementById("counter1");
+  } else if (group === 2) {
+    statusElement = document.getElementById("counter2");
+  } else if (group === 5) {
+    statusElement = document.getElementById("counter5");
+  }
+
+  if (checkbox.checked) {
+    statusElement.style.display = "inline"; // チェックが入っている場合は表示
+  } else {
+    statusElement.style.display = "none"; // チェックが外れている場合は非表示
+  }
+
+  generateImage(); // 画像を再生成
+  generateCardtype();
+  getCroppedImage();
+}
+
+    var data = []; // エクセルのデータを格納する配列
+    var counterValue1 = 2; // ATKのカウンターの初期値
+    var counterValue2 = 2; // DEFのカウンターの初期値
+    var counterValue3 = 0;
+    var counterValue4 = 0; // COSTのカウンターの初期値
+    var counterValue5 = 20; // HPのカウンターの初期値
+    var counterValue6 = 0; // カードタイプのカウンターの初期値
+    var activeButtons = []; // アクティブなボタンのテキストを格納する配列
+
+function generateImage() {
+      var text = document.getElementById('text-input').value;
+
+    var canvas = document.getElementById('canvas');
+    var ctx = canvas.getContext('2d');
+
+      var imageWidth = 630;  // 画像の幅（ピクセル）
+      var imageHeight = 880; // 画像の高さ（ピクセル）
+      var canvasWidth = 630; // Canvasの幅（ピクセル）
+      var canvasHeight = 880; // Canvasの高さ（ピクセル）
+
+      // 画像の比率を計算
+      var widthRatio = canvasWidth / imageWidth;
+      var heightRatio = canvasHeight / imageHeight;
+
+      // Canvasのサイズを変更
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+
+       // フレーム画像を描画
+       if (selectedImage) {
+            ctx.drawImage(selectedImage, 0, 0, canvasWidth, canvasHeight);
+        }
+
+      // カード名のスタイルを設定
+      ctx.font = '900 64px "Noto Sans JP", serif';
+      ctx.fillStyle = 'white';
+      ctx.lineWidth = 6;
+      ctx.strokeText(text, 15, 60);
+
+      // カード名を描画
+      ctx.fillText(text, 15, 60);
+
+      // ATKの値を描画
+      ctx.fillStyle = 'white';
+      ctx.strokeStyle = 'red';
+      if (document.getElementById("showATK").checked) {
+        ctx.font = '900 40px "Noto Sans JP", serif';
+        ctx.strokeText('ATK ', 30, 865);
+        ctx.fillText('ATK ', 30, 865);
+        ctx.font = '900 64px "Noto Sans JP", serif';
+        ctx.strokeText(counterValue1, 115, 865);
+        ctx.fillText(counterValue1, 115, 865);
+      }
+
+      // DEFの値を描画
+      ctx.fillStyle = 'white';
+      ctx.strokeStyle = 'green';
+      if (document.getElementById("showDEF").checked) {
+        ctx.font = '900 40px "Noto Sans JP", serif';
+        ctx.strokeText('HP', 495, 865);
+        ctx.fillText('HP', 495, 865);
+        ctx.font = '900 64px "Noto Sans JP", serif';
+        ctx.strokeText(counterValue2, 560, 865);
+        ctx.fillText(counterValue2, 560, 865);
+      }
+
+      // HPの値を描画
+      ctx.fillStyle = 'white';
+      ctx.strokeStyle = 'green';
+      if (document.getElementById("showHP").checked) {
+        ctx.font = '900 40px "Noto Sans JP", serif';
+        ctx.strokeText('HP', 465, 865);
+        ctx.fillText('HP', 465, 865);
+        ctx.font = '900 64px "Noto Sans JP", serif';
+        ctx.strokeText(counterValue5, 530, 865);
+        ctx.fillText(counterValue5, 530, 865);
+      }
+
+      // COSTの値を描画
+ctx.font = '400 38px "Noto Sans JP", serif';
+ctx.fillStyle = 'yellow'; // 初期の★の色
+
+// コストが負の値にならないように確認
+var starsCount = Math.max(0, counterValue4);
+
+// コストが負の値にならないように確認
+var starsCount = Math.max(0, counterValue4);
+
+// ★を1つずつ描画
+for (var i = 0; i < starsCount; i++) {
+  if (i < 4) {
+    ctx.fillStyle = 'yellow';
+  } else if (i < 8) {
+    ctx.fillStyle = 'orange';
+  } else {
+    ctx.fillStyle = 'red';
+  }
+
+  // ★を1つずつ描画
+  ctx.strokeStyle = 'black';
+  ctx.strokeText('★', 17 + i * 50, 102);
+  ctx.fillText('★', 17 + i * 50, 102); // 位置を調整
+}
+
+      // アクティブなボタンのテキストを描画
+      ctx.font = '700 19px Noto Sans JP';
+      ctx.fillStyle = 'Black';
+      for (var i = 0; i < activeButtons.length; i++) {
+        ctx.fillText(activeButtons[i], 80, 645 + i * 30);
+      }
+
+      // 生成された画像のデータURLを取得
+      var dataURL = canvas.toDataURL();
+
+      // 画像を表示
+      var resultImg = document.createElement('img');
+      resultImg.src = dataURL;
+    }
+
+    function resetMenu() {
+      // エクセルデータと関連する変数や状態をリセット
+      data = [];
+      activeButtons = [];
+
+      // 効果COSTをリセット
+      var resultContainer = document.getElementById('result');
+      resultContainer.textContent = "0";
+
+      // メニューコンテナを取得
+      var container = document.getElementById('menuContainer');
+      container.innerHTML = '';
+
+}
+
+    function readExcel() {
+      var fileInput = document.getElementById('excelFile');
+      var file = fileInput.files[0];
+      var reader = new FileReader();
+
+      reader.onload = function(e) {
+        var arrayBuffer = new Uint8Array(e.target.result);
+        var workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        var sheetName = workbook.SheetNames[0];
+        var worksheet = workbook.Sheets[sheetName];
+        // エクセルデータをJSON形式に変換し、配列に格納
+        data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        createMenu(); // 折りたたみメニューの生成を開始
+      };
+
+      reader.readAsArrayBuffer(file); // エクセルファイルを読み込む
+      resetMenu(); // メニューのリセット
+                          // ボタンを表示
+                          document.getElementById('ユニットButton').style.display = 'inline-block';
+                          document.getElementById('スキルButton').style.display = 'inline-block';
+                          document.getElementById('トラップButton').style.display = 'inline-block';
+                          document.getElementById('建物Button').style.display = 'inline-block';
+                          document.getElementById('武器Button').style.display = 'inline-block';
+                          document.getElementById('防具Button').style.display = 'inline-block';
+                          document.getElementById('リーダーButton').style.display = 'inline-block';
+                          document.getElementById('EXButton').style.display = 'inline-block';
+                
+    }
+
+    function createMenu() {
+  var container = document.getElementById('menuContainer');
+  container.innerHTML = '';
+
+  var categories = [];
+
+  for (var i = 0; i < data.length; i++) {
+    var row = data[i];
+
+    // 行が空またはボタンテキスト（列0）が空の場合はスキップ
+    if (!row || row[0] === undefined || row[0].trim() === '') continue;
+
+    var category = row[2] || '未分類'; // カテゴリが空の場合は「未分類」を使用
+
+    if (!categories.includes(category)) {
+      categories.push(category);
+
+      var categoryHeader = document.createElement('div');
+      categoryHeader.textContent = category;
+      categoryHeader.classList.add('category-header');
+
+      var categoryItems = document.createElement('div');
+      categoryItems.classList.add('category-items');
+
+      container.appendChild(categoryHeader);
+      container.appendChild(categoryItems);
+    }
+
+    var button = document.createElement('button');
+    button.textContent = row[0];
+    button.setAttribute('data-index', i);
+    button.setAttribute('data-active', 'false'); // トグル状態を管理する属性を追加
+    button.addEventListener('click', toggleValue);
+
+    var categoryItem = container.getElementsByClassName('category-items')[categories.indexOf(category)];
+    categoryItem.appendChild(button);
+  }
+}
+
+
+function toggleValue(event) {
+  var button = event.target;
+  var index = button.getAttribute('data-index');
+  var value = parseInt(data[index][1]);
+  var cellValue = data[index][4]; // E列を取得
+
+  // トグル状態を切り替え
+  var isActive = button.getAttribute('data-active') === 'true';
+  button.setAttribute('data-active', !isActive);
+  
+  // 背景色を切り替え
+  button.style.backgroundColor = !isActive ? '#ffff00' : ''; // 黄色/デフォルト
+
+  if (isActive) {
+    
+  } else{
+    if (data[index][4] === 'X') { // E列はインデックス4（0始まり）で参照
+  // cellValue が undefined または null でないことを確認
+  if (cellValue && cellValue === 'X') {
+    var currentText = data[index][0]; // 元のA列の値を保存
+    var newValue = prompt('新しい値を入力してください', currentText); // デフォルト値を表示
+
+    if (newValue !== null) {
+      if (newValue.trim() === '') {
+        // 空の場合は元のテキストに戻す
+        newValue = currentText;
+      }
+      data[index][0] = newValue;
+      event.target.textContent = newValue;
+    }
+
+    // 必要に応じてデータも更新
+    data[index][0] = newValue;
+
+    // 他の関数を呼び出す
+    generateImage();
+    generateCardtype();
+    getCroppedImage();
+  }
+  }
+  }
+
+      if (button.classList.contains('active')) {
+        // ボタンがアクティブな場合
+        value = -value; // 数値をマイナスにする
+        button.classList.remove('active');
+        activeButtons.splice(activeButtons.indexOf(button.textContent), 1); // 配列から削除
+      } else {
+        // ボタンが非アクティブな場合
+        button.classList.add('active'); // アクティブにする
+        activeButtons.push(button.textContent); // 配列に追加
+      }
+      updateResult(value); // 効果COSTを更新
+      generateImage(); // 画像を再生成
+      generateCardtype();
+      getCroppedImage();
+    }
+
+    function updateResult(value) {
+      var resultContainer = document.getElementById('result');
+      var currentResult = parseInt(resultContainer.textContent || 0);
+
+      var newResult = currentResult + value; // ボタンの数値を現在の結果に加算
+      resultContainer.textContent = newResult; // 新しい結果を表示
+
+      // 効果COSTをカウンターにも反映
+      {
+        counterValue3 = currentResult + value;
+      }
+
+      updateCounters(); // カウンターを更新
+    }
+
+    // +1ボタンのクリックイベント
+    function increment(group) {
+  if (group === 1 && counterValue1 < 9) {
+    counterValue1++;
+  } else if (group === 2 && counterValue2 < 9) {
+    counterValue2++;
+  }
+  updateCounters();
+  generateImage(); // Regenerate the image
+  generateCardtype();
+  getCroppedImage();
+}
+
+    // -1ボタンのクリックイベント
+    function decrement(group) {
+  if (group === 1 && counterValue1 > 1) {
+    counterValue1--;
+  } else if (group === 2 && counterValue2 > 1) {
+    counterValue2--;
+  }
+  updateCounters();
+  generateImage(); // Regenerate the image
+  generateCardtype();
+  getCroppedImage();
+}
+
+    // 合計とステータスの表示更新
+    function updateCounters() {
+      counterValue4 = counterValue1 + counterValue2 + counterValue3 + -4;
+
+      const counter1 = document.getElementById("counter1");
+      counter1.textContent = counterValue1;
+
+      const counter2 = document.getElementById("counter2");
+      counter2.textContent = counterValue2;
+
+      const total = document.getElementById("counter3");
+      total.textContent = counterValue1 + counterValue2 + counterValue3 + -4;
+
+      generateImage(); // 画像を再生成
+      generateCardtype();
+      getCroppedImage();
+    }
+
+function getCroppedImage() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+// 元の高解像度を保持
+const originalWidth = 630;  // 希望する描画バッファサイズ
+const originalHeight = 880;
+
+// 描画バッファのサイズを設定
+canvas.width = originalWidth;
+canvas.height = originalHeight;
+
+// 表示サイズをCSSで制御
+canvas.style.width = '100%';
+canvas.style.height = 'auto';
+
+    // Scaleの設定 (1.0はデフォルト値として設定)
+    const scale = 1.0;
+
+    // クロップ画像の描画位置とサイズ
+    const viewportWidth = originalWidth * 0.73;  // キャンバスの73%サイズ
+    const viewportHeight = originalWidth;      // 正方形のビューポート
+    const croppieX = (originalWidth - viewportWidth) / 2; // 中央配置のX位置
+    const croppieY = (originalHeight - viewportHeight) / 2; // 中央配置のY位置
+
+    // Croppieから画像を取得
+    croppieInstance.result({
+        type: 'canvas', // 'base64', 'blob', 'rawcanvas' なども使用可
+        format: 'png',
+        quality: 1.0 // 最高品質
+    }).then(function (resp) {
+        // 描画する画像をロード
+        const img= new Image();
+        img.onload = function () {
+            // キャンバスに描画
+            ctx.drawImage(img, croppieX, croppieY, viewportWidth, viewportWidth);
+        };
+        img.src = resp;
+    }).catch(function (error) {
+        console.error('Croppieのresultの取得に失敗しました', error);
+    });
+}
+
+// Excelファイルを自動で読み込む関数
+async function readExcelAutomatically() {
+    return new Promise(async (resolve, reject) => {
+          try {
+              const response = await fetch('assets/data.xlsx');
+              if (!response.ok) {
+                  throw new Error('Excelファイルの取得に失敗しました');
+              }
+  
+              const arrayBuffer = await response.arrayBuffer();
+              const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+              const sheetName = workbook.SheetNames[0];
+              const worksheet = workbook.Sheets[sheetName];
+  
+              data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  
+              createMenu(); // メニュー生成
+              resolve(); // 成功時に解決
+          } catch (error) {
+              console.error('Excelファイルの読み込みに失敗しました', error);
+              reject(error); // 失敗時にエラーを返す
+          }
+      });
+  }
+
+  function savecanvasimage(){
+    // Canvasの取得
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+    // savecanvasimage関数の定義
+    window.savecanvasimage = function() {
+        const imageUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = 'original-card.png';
+        link.click();
+    }
+
+  }
+  
+  window.onload = readExcelAutomatically();
+      
+  </script>
+
+</div>
+  
+</body>
+</html>
