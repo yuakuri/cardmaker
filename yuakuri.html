@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+    <head>
+        <link rel="stylesheet" href="style.css">
+        <script src="script.js" defer></script>
+        <title>yuakuri</title>
+    </head>
+    <body>
+        <div class="background-color">
+        <h1 style="text-align:center"><br>ゆあクリ!</h1>
+        <hr style="height: 1px; background-color: black;">
+        <p style="text-align:center"><img src="card1.png" width="315" height="440"></p>
+        <hr style="height: 1px; background-color: black;">
+        <h3>このサイトについて</h3>
+        <hr>
+        <p>
+            このサイトは、個人で製作されたオリジナルカードゲーム、「ゆあクリ」の公式サイトです
+        </p>
+        <hr style="height: 1px; background-color: black;">
+        <h3>メイン</h3>
+        <hr>
+        <a href="https://yuakuri.github.io/cardmaker/">カード作成</a><br>
+        <a href="https://yuakuri.github.io/cardmaker/ruleguide.pdf">ルールガイド</a>
+        <hr style="height: 1px; background-color: black;">
+        <h3>お知らせ</h3>
+        <hr>
+        <p>
+            20XX/XX/XX<br>
+            サンプル<br>
+            20XX/XX/XX<br>
+            テスト<br>
+        </p>
+        <hr style="height: 1px; background-color: black;">
+        <h3>掲示板</h3>
+        <hr>
+        <a href="">雑談掲示板(準備中)</a><br>
+        <a href="">対戦募集掲示板(準備中)</a>
+        <hr style="height: 1px; background-color: black;">
+        <h3>コメント</h3>
+        <hr>
+        <form action="https://docs.google.com/forms/d/e/1FAIpQLSePFFGuxPT0wvRZvwxSGG98T0v94I6V_OXREw57XzYx94mJfg/formResponse" target="hidden_iframe" method="post" onsubmit="return test(this.wcheck.value)">
+            <p><input name="entry.157948453" placeholder="名前" value="名無し" required></p>
+            <p><input name="entry.565890946" placeholder="メールアドレス" type="email"></p>
+            <p><textarea name="entry.1443044818" placeholder="コメント" rows="10" cols="40" maxlength="400" id="wcheck" required></textarea></p>
+            <input type="submit" id="submitbutton" value="送信">
+            </form>
+            <iframe onload='if(submitted){window.location="";}' id=hidden_iframe name=hidden_iframe style=display:none></iframe>
+            
+    </div>
+    </body>
+
+</html>
