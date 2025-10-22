@@ -608,15 +608,49 @@ document.addEventListener('DOMContentLoaded', () => {
             effectEl.className = 'selected-effect-item';
             effectEl.draggable = true;
             effectEl.dataset.id = effect.id;
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'effect-name';
+
+            if (effect.isCustom && effect.originalName) {
+                if (effect.customType === 'text') {
+                    const regex = /(X\(カード名or〇〇族\)|X\(カード名\)|X族)/g;
+                    let partIndex = 0;
+                    const html = effect.originalName.replace(regex, () => {
+                        const currentValue = effect.editableParts[partIndex] || '';
+                        const currentIndex = partIndex;
+                        partIndex++;
+                        return `<input type="text" class="editable-part" value="${currentValue}" data-part-index="${currentIndex}">`;
+                    });
+                    nameSpan.innerHTML = html;
+                } else if (effect.customType === 'select') {
+                    const grantEffectRegex = /X\((\d+)コストの基礎効果系A\)/;
+                    const options = state.basicEffectsAByCost.get(effect.selectOptionsCost) || [];
+                    
+                    let selectHTML = `<select class="editable-part" data-part-index="0">`;
+                    options.forEach(option => {
+                        const selected = (option === effect.editableParts[0]) ? 'selected' : '';
+                        selectHTML += `<option value="${option}" ${selected}>${option}</option>`;
+                    });
+                    selectHTML += `</select>`;
+                    
+                    nameSpan.innerHTML = effect.originalName.replace(grantEffectRegex, selectHTML);
+                } else {
+                    nameSpan.textContent = effect.name;
+                }
+            } else {
+                nameSpan.textContent = effect.name;
+            }
+
             effectEl.innerHTML = `
                 <div class="move-buttons">
                     <button class="move-up-button">▲</button>
                     <button class="move-down-button">▼</button>
                 </div>
-                <span class="effect-name">${effect.name}</span>
                 <span class="effect-cost-display">${effect.cost}</span>
                 <button class="remove-effect-button">×</button>
             `;
+            effectEl.insertBefore(nameSpan, effectEl.querySelector('.effect-cost-display'));
             elements.selectedEffectsContainer.appendChild(effectEl);
         });
     };
@@ -786,6 +820,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        const addEffect = (effect) => {
+            let effectToAdd = { ...effect };
+            if (effectToAdd.isCustom) {
+                const grantEffectRegex = /X\((\d+)コストの基礎効果系A\)/;
+                const grantMatch = effect.name.match(grantEffectRegex);
+
+                if (grantMatch) {
+                    effectToAdd.customType = 'select';
+                    const starCost = parseInt(grantMatch[1], 10);
+                    effectToAdd.selectOptionsCost = starCost;
+                    effectToAdd.originalName = effect.name;
+                    
+                    const options = state.basicEffectsAByCost.get(starCost) || [];
+                    const defaultOption = options[0] || '';
+                    effectToAdd.editableParts = [defaultOption];
+                    effectToAdd.name = effect.name.replace(grantEffectRegex, defaultOption);
+
+                } else {
+                    const textRegex = /(X\(カード名or〇〇族\)|X\(カード名\)|X族)/g;
+                    if (effect.name.match(textRegex)) {
+                        effectToAdd.customType = 'text';
+                        effectToAdd.originalName = effect.name;
+                        effectToAdd.editableParts = effect.name.match(textRegex) || [];
+                    }
+                }
+            }
+            state.activeEffects.push(effectToAdd);
+        };
+
         if (template) {
             const activeIdInGroup = state.activeTemplateMap.get(template);
             if (activeIdInGroup === id) {
@@ -795,20 +858,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (activeIdInGroup) {
                     state.activeEffects = state.activeEffects.filter(e => e.id !== activeIdInGroup);
                 }
-                state.activeEffects.push({ ...effect });
+                addEffect(effect);
                 state.activeTemplateMap.set(template, id);
             }
         } else {
             if (state.activeEffects.some(e => e.id === id)) {
                 state.activeEffects = state.activeEffects.filter(e => e.id !== id);
             } else {
-                let effectToAdd = { ...effect };
-                if (effect.isCustom) {
-                    const newValue = prompt('新しい値を入力してください', effect.name);
-                    if (newValue === null) return;
-                    effectToAdd.name = newValue || effect.name;
-                }
-                state.activeEffects.push(effectToAdd);
+                addEffect(effect);
             }
         }
         updateState();
@@ -1293,6 +1350,42 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        const handleEditablePartChange = (element) => {
+            const effectItem = element.closest('.selected-effect-item');
+            if (!effectItem) return;
+            const effectId = parseInt(effectItem.dataset.id, 10);
+            const effect = state.activeEffects.find(e => e.id === effectId);
+            if (!effect) return;
+
+            if (effect.customType === 'text') {
+                const partIndex = parseInt(element.dataset.partIndex, 10);
+                if (effect.editableParts) {
+                    effect.editableParts[partIndex] = element.value;
+                    const regex = /(X\(カード名or〇〇族\)|X\(カード名\)|X族)/g;
+                    let i = 0;
+                    effect.name = effect.originalName.replace(regex, () => effect.editableParts[i++] || '');
+                    render();
+                }
+            } else if (effect.customType === 'select') {
+                effect.editableParts[0] = element.value;
+                const grantEffectRegex = /X\((\d+)コストの基礎効果系A\)/;
+                effect.name = effect.originalName.replace(grantEffectRegex, element.value);
+                render();
+            }
+        };
+
+        elements.selectedEffectsContainer.addEventListener('input', e => {
+            if (e.target.classList.contains('editable-part') && e.target.tagName === 'INPUT') {
+                handleEditablePartChange(e.target);
+            }
+        });
+
+        elements.selectedEffectsContainer.addEventListener('change', e => {
+            if (e.target.classList.contains('editable-part') && e.target.tagName === 'SELECT') {
+                handleEditablePartChange(e.target);
+            }
+        });
+
         let draggedId = null;
 
         elements.selectedEffectsContainer.addEventListener('dragstart', e => {
@@ -1631,6 +1724,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 category: row[2],
                 isCustom: row[4] === 'X'
             })).filter(e => e.name && e.name.trim());
+
+            const basicEffectsAByCost = new Map();
+            parsedEffects.forEach(effect => {
+                if (effect.category === '【03】基礎効果系A') {
+                    const cost = effect.cost;
+                    if (!basicEffectsAByCost.has(cost)) {
+                        basicEffectsAByCost.set(cost, []);
+                    }
+                    // Don't add duplicates
+                    if (!basicEffectsAByCost.get(cost).includes(effect.name)) {
+                        basicEffectsAByCost.get(cost).push(effect.name);
+                    }
+                }
+            });
+            state.basicEffectsAByCost = basicEffectsAByCost;
 
             state.allEffects = groupSimilarEffects(parsedEffects);
 
