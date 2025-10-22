@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゆあクリ！</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="image/favicon.ico">
+</head>
+<body>
+    <header class="app-header">
+        <h1>ゆあクリ！</h1>
+    </header>
+
+
+
+    <div class="tab-switcher">
+        <button id="show-card-maker" class="tab-button active">カードメーカー</button>
+        <button id="show-deck-builder" class="tab-button">デッキビルダー</button>
+        <button id="show-ruleguide" class="tab-button">ルールガイド</button>
+    </div>
+
+    <!-- カードメーカーのタブ -->
+    <div id="card-maker-tab" class="tab-content active">
+        <main class="app-container">
+            <div class="left-column">
+                <!-- カードデータ管理セクション -->
+                <section class="settings-section">
+                    <div class="settings-group">
+                        <h3>編集状況の読込</h3>
+                        <div class="setting-item">
+                            <label for="card-template-selector">保存済みデータ:</label>
+                            <select id="card-template-selector"></select>
+                        </div>
+                        <div class="deck-buttons">
+                            <button id="load-card-template-btn" class="button">読込</button>
+                            <button id="delete-card-template-btn" class="button">削除</button>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                         <button id="save-card-template-btn" class="button button-primary">現在の編集状況を保存</button>
+                    </div>
+                </section>
+                <!-- 設定セクション -->
+                <section class="settings-section">
+                    <div class="settings-group">
+                        <h3>基本設定</h3>
+                        <div class="setting-item">
+                            <label for="card-name-input">カード名:</label>
+                            <input type="text" id="card-name-input" placeholder="カード名を入力">
+                        </div>
+                        <div class="setting-item">
+                            <label for="card-ruby-input">ルビ:</label>
+                            <input type="text" id="card-ruby-input" placeholder="ふりがなを入力">
+                        </div>
+                        <div class="setting-item">
+                            <label>カード名サイズ:</label>
+                            <div id="card-name-size-group" class="radio-button-group">
+                                <button data-size="48" class="active">S</button>
+                                <button data-size="64">M</button>
+                                <button data-size="80">L</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>画像設定</h3>
+                        <div class="setting-item">
+                            <label for="image-upload">メイン画像:</label>
+                            <input type="file" id="image-upload" accept="image/*">
+                        </div>
+                        <div class="setting-item">
+                            <label for="image-zoom">拡縮:</label>
+                            <input type="range" id="image-zoom" min="0.1" max="5" step="0.05" value="1">
+                        </div>
+                        <div class="setting-item">
+                            <label for="image-pos-x">X座標:</label>
+                            <input type="range" id="image-pos-x" min="-1000" max="1000" step="5" value="0">
+                        </div>
+                        <div class="setting-item">
+                            <label for="image-pos-y">Y座標:</label>
+                            <input type="range" id="image-pos-y" min="-1000" max="1000" step="5" value="0">
+                        </div>
+                        <div class="setting-item">
+                            <button id="image-center-button" class="button">画像を中央に配置</button>
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>カードタイプ</h3>
+                        <div id="card-type-buttons" class="radio-button-group">
+                            <!-- ボタンはJSで生成 -->
+                        </div>
+                    </div>
+
+                    <div class="settings-group">
+                        <h3>ステータス</h3>
+                        <div class="status-grid">
+                            <div class="status-item">
+                                <label>ATK</label>
+                                <div class="status-control">
+                                    <button id="atk-decrement">-</button>
+                                    <span id="atk-value">2</span>
+                                    <button id="atk-increment">+</button>
+                                </div>
+                            </div>
+                            <div class="status-item">
+                                <label>HP</label>
+                                <div class="status-control">
+                                    <button id="hp-decrement">-</button>
+                                    <span id="hp-value">2</span>
+                                    <button id="hp-increment">+</button>
+                                </div>
+                            </div>
+                            <div class="status-item">
+                                <label>リーダーHP</label>
+                                <div class="status-control">
+                                    <span id="leader-hp-value">20</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <div class="sticky-sidebar-group">
+                    <section id="effects-toc-section" class="settings-section">
+                        <div id="effects-toc" class="settings-group">
+                            <h3 class="collapsible-header">効果カテゴリ</h3>
+                            <div id="toc-content" class="collapsible-content"></div>
+                        </div>
+                    </section>
+                    <section id="favorite-effects-section" class="settings-section">
+                        <div class="settings-group">
+                            <h3 class="collapsible-header">お気に入り効果</h3>
+                            <div id="favorite-effects-content" class="collapsible-content"></div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- プレビューセクション -->
+            <section class="preview-section">
+                <div class="preview-sticky-content">
+                    <canvas id="canvas" width="630" height="880"></canvas>
+                    <div class="setting-item">
+                        <label>プレビューサイズ:</label>
+                        <div id="preview-size-group" class="radio-button-group">
+                            <button data-size="50" class="active">S</button>
+                            <button data-size="75">M</button>
+                            <button data-size="100">L</button>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <button id="save-button" class="button button-primary">カード画像の保存</button>
+                        <button id="add-to-deck-button" class="button">デッキに追加</button>
+                    </div>
+                    <div class="setting-item" id="search-bar-container">
+                        <input type="search" id="effect-search-input" placeholder="効果を検索...">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 効果セクション -->
+            <section class="effects-section">
+                <h3>効果リスト</h3>
+                <div class="effects-controls">
+                    <button id="reset-effects-button" class="button">選択中効果をリセット</button>
+                    <button id="expand-collapse-effects-button" class="button">すべて展開</button>
+                </div>
+                <p>合計コスト: <span id="total-cost">0</span></p>
+                <p>効果コスト: <span id="effect-cost-total">0</span></p>
+                <div id="selected-effects-container" class="selected-effects-container"></div>
+                <div id="effects-menu"></div>
+            </section>
+        </main>
+    </div>
+
+    <div id="deck-builder-tab" class="tab-content" style="display: none;">
+        <main class="app-container deck-builder-container">
+            <!-- Left Column: Card Pool -->
+            <section class="deck-builder-column">
+                <h3>カードプール</h3>
+                <div class="setting-item">
+                    <label>カード画像読み込み:</label>
+                    <input type="file" id="deck-card-upload-single" multiple accept="image/*" style="display: none;">
+                    <button class="button" id="upload-button">ファイル読込</button>
+                </div>
+                <div id="deck-card-pool" class="card-pool-area">
+                    <!-- Uploaded cards will be displayed here -->
+                </div>
+            </section>
+
+            <!-- Right Column: Deck Editing -->
+            <section class="deck-builder-column">
+                <h3>デッキ編集</h3>
+                <div class="deck-controls-group">
+                    <div class="setting-item">
+                        <label for="deck-selector">保存済みデッキ:</label>
+                        <select id="deck-selector"></select>
+                    </div>
+                    <div class="deck-buttons">
+                        <button id="new-deck-btn">新規作成</button>
+                        <button id="save-deck-btn">保存</button>
+                        <button id="delete-deck-btn">削除</button>
+                        <button id="export-deck-btn">エクスポート</button>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <label for="deck-name-input">デッキ名:</label>
+                    <input type="text" id="deck-name-input" placeholder="デッキ名を入力">
+                </div>
+                <h4>リーダー</h4>
+                <div id="deck-leader-slot" class="deck-slot-area"></div>
+                <h4>メインデッキ (<span id="deck-card-count">0</span>/30)</h4>
+                <div id="deck-main-list" class="deck-list-area"></div>
+            </section>
+        </main>
+    </div>
+
+    <div id="ruleguide-tab" class="tab-content" style="display: none;">
+        <div class="ruleguide-content">
+            <section class="settings-section">
+                <div class="settings-group">
+                    <h3>用意するもの</h3>
+                    <ul>
+                        <li>デッキ30枚+リーダーカード</li>
+                        <li>ダメージカウンター＋毒マーカー</li>
+                    </ul>
+                </div>
+            </section>
+            <section class="settings-section">
+                <div class="settings-group">
+                    <h3>対戦準備</h3>
+                    <ol>
+                        <li>先攻と後攻を決めます</li>
+                        <li>リーダーカードを裏向きにして配置します</li>
+                        <li>山札を上から1枚オモテにし、禁止ゾーンに置きます(そのカードと同名のカードは試合中使用不可)</li>
+                        <li>デッキをシャッフルし、山札からカードを引きます(先攻は3枚、後攻は4枚)</li>
+                        <li>手札のカードを任意の枚数(0枚でも可)山札に戻して切り、戻した枚数分山札を引きます</li>
+                        <li>「オープン！」と宣言し、リーダーカードを表向きにします</li>
+                        <li>後攻プレイヤーはスキルチャージを2回します</li>
+                    </ol>
+                </div>
+            </section>
+            <section class="settings-section">
+                <div class="settings-group">
+                    <h3>対戦開始後</h3>
+                    <ol>
+                        <li>ターン開始
+                            <ul><li>コストの最大値(初期値0)が1上昇し、コストが全回復します</li></ul>
+                        </li>
+                        <li>ドローフェイズ
+                            <ul><li>山札の上からカードを1枚引きます</li></ul>
+                        </li>
+                        <li>メインフェイズ
+                            <p class="ruleguide-supplement">（次の行動から好きな回数選択）</p>
+                            <ul>
+                                <li>ユニット/建物/武器/防具を召喚</li>
+                                <li>スキルを使用</li>
+                                <li>リーダースキルにチャージ</li>
+                                <li>対象を選択して攻撃</li>
+                            </ul>
+                            <p class="ruleguide-supplement">(先攻1ターン目、後攻のリーダーはダメージを受けません)</p>
+                        </li>
+                        <li>メインフェイズを終了します</li>
+                        <li>セットフェイズ
+                            <ul><li>手札からトラップを1枚選び、トラップゾーンに設置します</li></ul>
+                        </li>
+                        <li>ターン終了
+                            <ul><li>ターンを終了します(自分の手札が7枚以上の場合、6枚になるように捨てます)</li></ul>
+                        </li>
+                        <li>自分の毒のユニットに好きな順番でダメージを与えます</li>
+                        <li>相手は相手自身の毒のユニットに好きな順番でダメージを与えます</li>
+                        <li>相手のターンが開始します</li>
+                    </ol>
+                    <p class="ruleguide-supplement">（上記を繰り返し、相手リーダーのHPが0以下になった時点で勝利します）</p>
+                </div>
+            </section>
+            <section class="settings-section">
+                <div class="settings-group">
+                    <h3>ルール詳細</h3>
+                    <h4>各種カードについて</h4>
+                    <dl>
+                        <div>
+                            <dt>ユニット</dt>
+                            <dd><ul>
+                                <li>主に攻撃と防御を担い、メインとなるカードです</li>
+                                <li>ATK＝攻撃力 HP＝体力で、HPが0以下になると死亡します</li>
+                                <li>攻撃した場合、攻撃者のATK分のダメージを与えます その場合、攻撃者(自分)も攻撃対象(相手)のATK分のダメージを受けます(反撃)</li>
+                                <li>召喚したターンには攻撃できません</li>
+                                <li>ユニット1体につき、1ターンに1回までしか攻撃できません</li>
+                            </ul></dd>
+                        </div>
+                        <div>
+                            <dt>建物</dt>
+                            <dd><ul>
+                                <li>お互いの場の間（建物ゾーン）に1枚まで出せます</li>
+                                <li>自分の番に1回、効果を発動できます</li>
+                                <li>建物召喚時にコストを支払い、効果発動時にはコストを支払いません</li>
+                                <li>エクシードのコストは効果を発動する度に支払うかを選択します</li>
+                                <li>相手の建物カードも使用できます</li>
+                                <li>場に新しく建物カードが出たとき、元からある建物カードは所有者の墓地に置きます</li>
+                                <li>「発動条件系」の効果はつけられません</li>
+                            </ul></dd>
+                        </div>
+                        <div>
+                            <dt>スキル</dt>
+                            <dd><ul>
+                                <li>スキルカードは場に出さず、使用後は墓地に置きます</li>
+                                <li>スキルカードの効果は発動条件を記載しなくても手札から出した場合に発動します</li>
+                            </ul></dd>
+                        </div>
+                        <div>
+                            <dt>武器/防具</dt>
+                            <dd><ul>
+                                <li>武器カード/防具カードは、装備カードとして扱います</li>
+                                <li>武器カードは、リーダーの左隣に置きます(装備)</li>
+                                <li>装備した場合、リーダーは武器のATKを参照して攻撃できるようになります</li>
+                                <li>リーダーがダメージを受けたとき、武器カードも同じダメージを受けます</li>
+                                <li>武器カードを装備している場合でも、リーダーが反撃することはできません</li>
+                                <li>召喚したターンには攻撃できません</li>
+                                <li>武器1枚につき、1ターンに1回までしか攻撃できません</li>
+                                <li>防具カードは、リーダーの右隣に置きます(装備)</li>
+                                <li>装備した場合、リーダーが受けるダメージを、代わりに防具カードが受けます</li>
+                            </ul></dd>
+                        </div>
+                        <div>
+                            <dt>リーダースキル</dt>
+                            <dd><ul>
+                                <li>リーダースキルは1ターンに1度のみ発動できます</li>
+                                <li>リーダーカードは使用しても墓地に置きません</li>
+                                <li>リーダースキルのコストはスキルチャージの必要回数・チャージの最大値になります</li>
+                                <li>スキルチャージは1ターンに1回まで使用可能で、コストを1消費します</li>
+                                <li>スキルチャージの必要回数(リーダースキルのコスト)を満たした場合、リーダースキルを 使用 できます。(使用後、チャージは0になります)</li>
+                            </ul></dd>
+                        </div>
+                        <div>
+                            <dt>トラップ</dt>
+                            <dd><ul>
+                                <li>トラップは自分のメインフェイズ終了時に、1枚のみ裏向きで出すことができます</li>
+                                <li>トラップの発動条件は、「発動条件系(トラップ専用)」からのみ選択できます</li>
+                                <li>トラップのコストは、自分の墓地からトラップのコストと同じ枚数のユニットを ロストさせて支払います (例：コスト3のトラップを使用するには墓地のユニットを3枚ロストさせる)</li>
+                                <li>トラップの効果処理は、他のすべての効果よりも先に行われます</li>
+                                <li>トラップの効果が発動した場合、トラップをロストさせます</li>
+                            </ul></dd>
+                        </div>
+                    </dl>
+                    <h4>配置について</h4>
+                    <dl>
+                        <div><dt>カバー</dt><dd>前後にユニットが並んでいる場合、後列のユニットは相手からの攻撃を受けません</dd></div>
+                        <div><dt>ウォール</dt><dd>前列/後列に関係なく、横に3体ユニットがいる場合は、リーダーは相手からの攻撃を 受けません</dd></div>
+                    </dl>
+                    <h4>効果について</h4>
+                    <div class="ruleguide-grid">
+                        <dl>
+                            <div><dt>におうだち</dt><dd>前列にいる場合のみ、相手はこのユニットにしか攻撃できません</dd></div>
+                            <div><dt>貫通</dt><dd>前列のユニットに攻撃した場合、そのユニットにカバーされているユニットにも ダメージを与えます(反撃は前列のユニットからのみ) 後列のユニットに攻撃した場合、リーダーにもダメージを与えます</dd></div>
+                            <div><dt>薙ぎ払い</dt><dd>攻撃対象と同じ列のユニットにもダメージを与えます (反撃は攻撃対象のユニットからのみ)</dd></div>
+                            <div><dt>速攻</dt><dd>召喚したターンに攻撃可能です 召喚したターンのみ、ATKが-1されます</dd></div>
+                            <div><dt>突進</dt><dd>召喚したターンに、相手ユニットにのみ攻撃可能です</dd></div>
+                            <div><dt>狙い撃ち</dt><dd>カバー、におうだちを無視して攻撃できます(ウォールは無視できない)</dd></div>
+                            <div><dt>ステルス</dt><dd>攻撃するまで相手からの攻撃、効果の対象として選択されません (ユニット全体が対象の効果は受けます) ダメージを受けたとき、ステルスは解除されます この効果をもつユニットが別の効果を発動したとき、ステルスは解除されます この効果が発動している間、この効果を持つカードでウォール、カバー、におうだち・バリアをすることはできません</dd></div>
+                            <div><dt>バリア</dt><dd>相手からの効果によるダメージを受けません(攻撃によるダメージは受ける)</dd></div>
+                            <div><dt>超バリア</dt><dd>相手からのすべての効果を受けません(攻撃によるダメージは受ける)</dd></div>
+                            <div><dt>ギャンブラー</dt><dd>攻撃時にコインを投げ、表ならATK+1、裏ならATK-1で計算します</dd></div>
+                            <div><dt>ドレインⅠ/Ⅱ/Ⅲ</dt><dd>攻撃時に発動し、このユニット(または武器)のHPを、 Ⅰなら1、Ⅱなら2、Ⅲなら3回復します 武器についている場合、リーダーのHPも同時に回復します</dd></div>
+                            <div><dt>遠隔攻撃</dt><dd>後列から攻撃したとき、反撃処理を行いません</dd></div>
+                        </dl>
+                        <dl>
+                            <div><dt>決闘</dt><dd>前列で正面2マスのユニットと戦闘したとき、戦闘した相手ユニットを死亡させます</dd></div>
+                            <div><dt>臆病</dt><dd>ダメージを受けたとき、手札に戻します</dd></div>
+                            <div><dt>2回攻撃</dt><dd>1ターンに2回攻撃を行えます</dd></div>
+                            <div><dt>トドメボーナス</dt><dd>攻撃ダメージでユニットを倒したとき、もう1回攻撃を行えます (1回の攻撃で複数のユニットを倒しても、増える攻撃回数は1回)</dd></div>
+                            <div><dt>猛毒化</dt><dd>この効果を持つカードが場にいるかぎり、お互いのユニットが 毒で受けるダメージは+1されます(重複可能)</dd></div>
+                            <div><dt>警備</dt><dd>この効果を持つカードが場にいる限り、自分の山札/墓地/手札は、相手からの効果を受けません</dd></div>
+                            <div><dt>アビリティ</dt><dd>このターン攻撃をしていないユニットが、 自分のメインフェイズに使える能力です このユニットを横向きにし、この効果以降の効果を発動できます 召喚したターンでも発動することができます</dd></div>
+                            <div><dt>スキルリンク</dt><dd>自分がスキルカードを使用するたびに発動する能力です スキルカードを0コストで使用した場合、この能力は発動しません</dd></div>
+                            <div><dt>【LEGEND】</dt><dd>デッキに1枚までしか入れられません</dd></div>
+                            <div><dt>【精鋭】</dt><dd>デッキに3枚までしか入れられません</dd></div>
+                            <div><dt>【奥義】</dt><dd>デッキに2枚までしか入れられません 自分のメインフェイズに、この効果以降の効果を発動できます この効果以降に記載されている効果は、試合中に1度しか使えません(別のカードの奥義も含む)</dd></div>
+                            <div><dt>エクシードn</dt><dd>効果発動直後のみ、追加でnコスト支払えます(任意) 支払った場合、この効果以降に記載されている効果を発動できます (例：5コスト,召喚時に発動,エクシード5→召喚時に合計10コスト支払った場合、 「エクシード5」以降の効果を発動できる) この効果がトラップに記載されている場合、コストは自分の墓地からユニットをロストさせて支払 います (例：2コスト,相手攻撃時に発動,エクシード4のトラップ→相手攻撃時に墓地のユニットを合計6枚 ロストさせた場合、「エクシード4」以降の効果を発動できる) リーダースキルにはつけられません</dd></div>
+                            <div><dt>ユニオン</dt><dd>場に出ている「〜族」または「カード名」を重ねた上にのみ召喚できます (例：ユニオン「人間族×2,魔族1」→場に出ている人間族を2体と魔族を1体選択し、選択したカー ドを任意のマスに重ねた上に、この効果を持つカードを重ねることで召喚できる) ユニオンしたユニットは【突進】を得ます</dd></div>
+                        </dl>
+                    </div>
+                    <h4>状態異常について</h4>
+                    <dl>
+                        <div><dt>毒</dt><dd>毎ターン終了時に1ダメージを受けます 毒マーカーをのせます</dd></div>
+                        <div><dt>封印</dt><dd>持っている効果がすべてなくなります カードの上下を逆さにします</dd></div>
+                        <div><dt>麻痺</dt><dd>自分のターンが終わるまで攻撃ができません また、アビリティが使用不可になります カードを横向きにします</dd></div>
+                    </dl>
+                    <h4>その他</h4>
+                    <dl>
+                        <div><dt>効果、ダメージ、死亡の処理</dt><dd><ol><li>攻撃時に発動する効果</li><li>攻撃ダメージ</li><li>反撃時に発動する効果</li><li>反撃ダメージ</li><li>死亡時に発動する効果</li><li>墓地に置く</li></ol></dd></div>
+                        <div><dt>場</dt><dd>ユニットの召喚ゾーン、建物ゾーン、装備ゾーンのことを指します</dd></div>
+                        <div><dt>HPが0のカード</dt><dd>回復をすることはできません</dd></div>
+                        <div><dt>山札が0枚</dt><dd>ターンの初めに山札を引けなかったプレイヤーは敗北します</dd></div>
+                    </dl>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="notification-container"></div>
+    <div id="main-tooltip" class="tooltip-text"></div>
+    <script src="js/script.js"></script>
+</body>
+</html>
