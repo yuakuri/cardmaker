@@ -296,7 +296,7 @@ input[type="text"], input[type="search"] {
 
 #effects-menu .category-items {
     padding-top: 0.5rem;
-    max-height: 2000px; /* Set a large enough max-height */
+    max-height: 5000px; /* Set a large enough max-height */
 }
 
 #effects-menu .category-items.is-closed {

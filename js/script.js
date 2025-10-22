@@ -498,6 +498,30 @@ document.addEventListener('DOMContentLoaded', () => {
         let description = ruleDescriptions.get(name);
         if (description) return description;
 
+        // ユニオンのパターンに対応
+        if (name.startsWith('ユニオン「')) {
+            description = ruleDescriptions.get('ユニオン');
+            if (description) return description;
+        }
+
+        // エクシードn：のパターンに対応
+        if (name.match(/^エクシード\d+：$/)) {
+            description = ruleDescriptions.get('エクシードn');
+            if (description) return description;
+        }
+
+        // アビリティ：のパターンに対応
+        if (name === 'アビリティ：') {
+            description = ruleDescriptions.get('アビリティ');
+            if (description) return description;
+        }
+
+        // スキルリンク：のパターンに対応
+        if (name === 'スキルリンク：') {
+            description = ruleDescriptions.get('スキルリンク');
+            if (description) return description;
+        }
+
         if (name.includes('毒状態にする')) return ruleDescriptions.get('毒');
         if (name.includes('麻痺状態にする')) return ruleDescriptions.get('麻痺');
         if (name.includes('封印状態にする')) return ruleDescriptions.get('封印');
@@ -1474,24 +1498,83 @@ document.addEventListener('DOMContentLoaded', () => {
         const noGroupKeywords = ['2回攻撃'];
         const romanMap = { 'Ⅰ': 1, 'Ⅱ': 2, 'Ⅲ': 3, 'Ⅳ': 4, 'Ⅴ': 5 };
 
+        // 新しいグループ化パターンを定義
+        const patterns = [
+            {
+                regex: /^(ユニオン「X\(カード名or〇〇族\)×)(\d+)(」)$/,
+                template: 'ユニオン「X(カード名or〇〇族)×○」'
+            },
+            {
+                regex: /^(相手ユニット1体に)(\d+)(ダメージ)$/,
+                template: '相手ユニット1体に○ダメージ'
+            },
+            {
+                regex: /^(山札からX族のカードを)(\d+)(枚手札に加える)$/,
+                template: '山札からX族のカードを○枚手札に加える'
+            },
+            {
+                regex: /^(山札から「X\(カード名\)」を)(\d+)(枚召喚する)$/,
+                template: '山札から「X(カード名)」を○枚召喚する'
+            },
+            {
+                regex: /^(墓地から「X\(カード名\)」を)(\d+)(枚召喚する)$/,
+                template: '墓地から「X(カード名)」を○枚召喚する'
+            },
+            {
+                regex: /^(自分または相手の墓地のカードを)(1枚|合計2枚)(ロストさせる)$/,
+                template: '自分または相手の墓地のカードを○枚ロストさせる',
+                customTemplate: (match) => `自分または相手の墓地のカードを○枚ロストさせる` // match[2]を○に置き換える
+            },
+            // 特例パターン1: 自分の山札が残り0枚なら(召喚|使用)できる
+            {
+                regex: /^(自分の山札が残り)(0枚)(なら)(召喚できる|使用できる)$/,
+                template: '自分の山札が残り○枚なら(召喚|使用)できる',
+                customTemplate: (match) => `自分の山札が残り○枚なら${match[4]}`
+            },
+            // 特例パターン2: 自分の山札が残りn枚以下なら(召喚|使用)できる
+            {
+                regex: /^(自分の山札が残り)(\d+)(枚以下なら)(召喚できる|使用できる)$/,
+                template: '自分の山札が残り○枚以下なら(召喚|使用)できる',
+                customTemplate: (match) => `自分の山札が残り○枚以下なら${match[4]}`
+            }
+        ];
+
         effects.forEach(effect => {
-            if (noGroupKeywords.includes(effect.name) || effect.isCustom) {
+            // isCustom の効果もグループ化の対象に含める
+            if (noGroupKeywords.includes(effect.name)) {
                 effectGroups.set(effect.name, effect);
                 return;
             }
 
             let template = null;
 
+            // 既存のドレイン処理
             const romanMatch = effect.name.match(/^(ドレイン)(Ⅰ|Ⅱ|Ⅲ|Ⅳ|Ⅴ)$/);
             if (romanMatch) {
                 template = `${romanMatch[1]}○`;
                 effect.value = romanMap[romanMatch[2]];
             } else {
-                const match = effect.name.match(/(\d+)/); // Find first number
-                if (match) {
-                    const numStr = match[0];
-                    const numIndex = effect.name.indexOf(numStr);
-                    template = `${effect.name.substring(0, numIndex)}○${effect.name.substring(numIndex + numStr.length)}`;
+                // 新しいパターンをチェック
+                for (const p of patterns) {
+                    const match = effect.name.match(p.regex);
+                    if (match) {
+                        if (p.customTemplate) {
+                            template = p.customTemplate(match);
+                        } else {
+                            template = match[1] + '○' + match[3];
+                        }
+                        break;
+                    }
+                }
+
+                // 既存の数値グループ化処理 (新しいパターンに一致しない場合のみ)
+                if (!template) {
+                    const match = effect.name.match(/(\d+)/); // Find first number
+                    if (match) {
+                        const numStr = match[0];
+                        const numIndex = effect.name.indexOf(numStr);
+                        template = `${effect.name.substring(0, numIndex)}○${effect.name.substring(numIndex + numStr.length)}`;
+                    }
                 }
             }
 
@@ -1507,6 +1590,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 effectGroups.get(template).variants.push(effect);
             } else {
                 effectGroups.set(effect.name, effect);
+            }
+        });
+
+        // グループ内のバリアントをソート
+        effectGroups.forEach(group => {
+            if (group.isGroup) {
+                group.variants.sort((a, b) => {
+                    // 数値部分を抽出して比較
+                    const getNum = (name) => {
+                        const match = name.match(/(\d+)/);
+                        return match ? parseInt(match[1], 10) : 0;
+                    };
+                    return getNum(a.name) - getNum(b.name);
+                });
             }
         });
 
@@ -2246,4 +2343,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial load
     loadCardTemplates();
 
+    // ==================================================
+    // ルールガイド・アコーディオン
+    // ==================================================
+    const accordionHeaders = document.querySelectorAll('#ruleguide-tab .accordion-header');
+    if (accordionHeaders.length > 0) {
+        accordionHeaders.forEach(header => {
+            header.addEventListener('click', function () {
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                } else {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
+            });
+        });
+    }
 });
