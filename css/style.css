@@ -41,7 +41,7 @@ body {
     grid-template-areas: "left preview effects";
     gap: 1.5rem;
     padding: 1.5rem;
-    align-items: start;
+    align-items: stretch;
 }
 
 .left-column {
@@ -68,14 +68,14 @@ body {
     padding: 1.5rem;
     box-shadow: var(--shadow);
     text-align: center;
-    position: sticky;
-    top: 1.5rem;
 }
 
 .preview-sticky-content {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    position: sticky;
+    top: 1.5rem;
 }
 
 .preview-sticky-content .setting-item {
@@ -103,9 +103,7 @@ body {
     gap: 1.5rem; /* Match the parent container's gap */
 }
 
-#effects-toc-section, #favorite-effects-section {
-    position: static;
-}
+
 
 #search-bar-container {
     position: sticky;

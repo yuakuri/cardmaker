@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (dd && dd.tagName === 'DD') {
                 const term = dt.textContent.trim();
                 // Use innerText to get the visible text content, which is better for tooltips
-                const description = dd.innerText.trim();
+                const description = dd.textContent.trim();
                 
                 // Handle composite keys like "ドレインⅠ/Ⅱ/Ⅲ"
                 if (term.includes('Ⅰ') && term.includes('/')) {
@@ -519,6 +519,58 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         updateFavoriteIcons();
         validateAndNotify();
+        validateExceedCost();
+        validateOugiCost();
+    };
+
+    const validateExceedCost = () => {
+        const exceedIndices = [];
+        state.activeEffects.forEach((effect, index) => {
+            const match = effect.name.match(/^エクシード(\d+)/);
+            if (match) {
+                exceedIndices.push({
+                    n: parseInt(match[1], 10),
+                    index: index
+                });
+            }
+        });
+
+        if (exceedIndices.length === 0) {
+            return;
+        }
+
+        exceedIndices.forEach((exceedInfo, i) => {
+            const startIndex = exceedInfo.index + 1;
+            const endIndex = (i + 1 < exceedIndices.length) ? exceedIndices[i + 1].index : state.activeEffects.length;
+
+            const effectsInBlock = state.activeEffects.slice(startIndex, endIndex);
+            const costInBlock = effectsInBlock.reduce((sum, effect) => sum + effect.cost, 0);
+
+            if (costInBlock < exceedInfo.n) {
+                showNotification(`エクシード${exceedInfo.n}以降の効果の合計コストは、${exceedInfo.n}以上になる必要があります`, 'error');
+            }
+        });
+    };
+
+    const validateOugiCost = () => {
+        let ougiIndex = -1;
+        state.activeEffects.forEach((effect, index) => {
+            if (effect.name.includes('【奥義】') && ougiIndex === -1) {
+                ougiIndex = index;
+            }
+        });
+
+        if (ougiIndex === -1) {
+            return;
+        }
+
+        const startIndex = ougiIndex + 1;
+        const effectsAfterOugi = state.activeEffects.slice(startIndex);
+        const costAfterOugi = effectsAfterOugi.reduce((sum, effect) => sum + effect.cost, 0);
+
+        if (costAfterOugi < 0) {
+            showNotification('【奥義】以降の効果の合計コストは、0以上になる必要があります', 'error');
+        }
     };
 
     // --- UI生成関数 ---
@@ -561,7 +613,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // スキルリンクのパターンに対応
         if (name.startsWith('スキルリンク')) {
-            description = ruleDescriptions.get('スキルリンクⅠ/Ⅱ/Ⅲ');
+            const key = name.endsWith('：') ? name.slice(0, -1) : name;
+            description = ruleDescriptions.get(key);
             if (description) return description;
         }
 
@@ -666,12 +719,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (effect.isCustom && effect.originalName) {
                 if (effect.customType === 'text') {
-                    const regex = /(X\(カード名or〇〇族\)|X\(カード名\)|X族)/g;
+                    const regex = /(X\(カード名or〇〇族\))|(X\(カード名\))|(X族)/g;
                     let partIndex = 0;
-                    const html = effect.originalName.replace(regex, () => {
+                    const html = effect.originalName.replace(regex, (match) => {
                         const currentValue = effect.editableParts[partIndex] || '';
                         const currentIndex = partIndex;
                         partIndex++;
+                        if (match === 'X族') {
+                            return `<input type="text" class="editable-part" value="${currentValue}" data-part-index="${currentIndex}">族`;
+                        }
                         return `<input type="text" class="editable-part" value="${currentValue}" data-part-index="${currentIndex}">`;
                     });
                     nameSpan.innerHTML = html;
@@ -904,13 +960,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     effectToAdd.name = effect.name.replace(grantEffectRegex, defaultOption);
 
                 } else {
-                    const textRegex = /(X\(カード名or〇〇族\)|X\(カード名\)|X族)/g;
-                    if (effect.name.match(textRegex)) {
-                        effectToAdd.customType = 'text';
-                        effectToAdd.originalName = effect.name;
-                        effectToAdd.editableParts = effect.name.match(textRegex) || [];
-                    }
-                }
+                                    const textRegex = /(X\(カード名or〇〇族\))|(X\(カード名\))|(X族)/g;
+                                    if (effect.name.match(textRegex)) {
+                                        effectToAdd.customType = 'text';
+                                        effectToAdd.originalName = effect.name;
+                                        const numParts = (effect.name.match(textRegex) || []).length;
+                                        effectToAdd.editableParts = Array(numParts).fill('');
+                                    }                }
             }
             state.activeEffects.push(effectToAdd);
         };
@@ -1557,9 +1613,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const partIndex = parseInt(element.dataset.partIndex, 10);
                 if (effect.editableParts) {
                     effect.editableParts[partIndex] = element.value;
-                    const regex = /(X\(カード名or〇〇族\)|X\(カード名\)|X族)/g;
+                    const regex = /(X\(カード名or〇〇族\))|(X\(カード名\))|(X族)/g;
                     let i = 0;
-                    effect.name = effect.originalName.replace(regex, () => effect.editableParts[i++] || '');
+                    effect.name = effect.originalName.replace(regex, (match) => {
+                        const partValue = effect.editableParts[i++] || '';
+                        if (match === 'X族') {
+                            return `${partValue}族`;
+                        }
+                        return partValue;
+                    });
                     render();
                 }
             } else if (effect.customType === 'select') {
@@ -1779,6 +1841,8 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         setupCollapsible(document.querySelector('#effects-toc-section h3'), document.getElementById('toc-content'));
         setupCollapsible(document.querySelector('#favorite-effects-section h3'), document.getElementById('favorite-effects-content'));
+
+
     };
 
     // --- 初期化関数 ---
@@ -1791,7 +1855,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const manualGroupRules = {
             'ブースト○': ['ブーストⅡ', 'ブーストⅢ'],
             'ギガボディ/超ギガボディ': ['ギガボディ', '超ギガボディ'],
-            '【強者】/【覇者】': ['【強者】ATK+1/HP+1', '【覇者】ATK+3/HP+3']
+            '【強者】/【覇者】': ['【強者】ATK+1/HP+1', '【覇者】ATK+3/HP+3'],
+            'スキルリンク○：': ['スキルリンクⅠ：', 'スキルリンクⅡ：', 'スキルリンクⅢ：']
         };
 
         // 逆引きマップを作成
@@ -1827,8 +1892,8 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const template in manualGroups) {
             // ソート
             manualGroups[template].variants.sort((a, b) => {
-                if (template === 'ブースト○') {
-                    return a.name.localeCompare(b.name); // Ⅱ, Ⅲ の順
+                if (template === 'ブースト○' || template === 'スキルリンク○：') {
+                    return a.name.localeCompare(b.name); // Ⅱ, Ⅲ or Ⅰ, Ⅱ, Ⅲ の順
                 }
                 return a.name.length - b.name.length; // 巨大, 超巨大 の順
             });
@@ -1971,7 +2036,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const basicEffectsAByCost = new Map();
             parsedEffects.forEach(effect => {
-                if (effect.category === '【03】基礎効果系A') {
+                if (effect.category === '【03】基礎効果系A' && !effect.name.includes('【強者】') && !effect.name.includes('【覇者】')) {
                     const cost = effect.cost;
                     if (!basicEffectsAByCost.has(cost)) {
                         basicEffectsAByCost.set(cost, []);
