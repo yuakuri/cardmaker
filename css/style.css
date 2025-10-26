@@ -35,113 +35,118 @@ body {
 
 
 .app-container {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 3fr 4fr 3fr; /* left, preview, effects */
+    grid-template-rows: auto;
+    grid-template-areas: "left preview effects";
     gap: 1.5rem;
     padding: 1.5rem;
-        align-items: stretch; /* Left-align sections */
-    } 
-    
-    .left-column {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-        flex: 3;
-        min-width: 350px;
-    }
-    
-    .settings-section, .preview-section, .effects-section {
-        background-color: var(--surface-color);
-        border-radius: 8px;
-        padding: 1.5rem;
-        box-shadow: var(--shadow);
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-    
-    .preview-section {
-        flex: 4;
-        min-width: 400px;
-        text-align: center;
-        /* position: sticky; is removed here */
-        top: 1.5rem;
-    }
-    
-    .preview-sticky-content {
-        position: sticky;
-        top: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
+    align-items: start;
+}
 
-    .preview-sticky-content .setting-item {
-        display: flex;
-        gap: 1rem;
-    }
+.left-column {
+    grid-area: left;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
 
-    .preview-sticky-content .setting-item .button {
-        flex: 1;
-    }    
-    .effects-section { flex: 3; min-width: 300px; }
-    
-    .sticky-sidebar-group {
-        position: sticky;
-        top: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem; /* Match the parent container's gap */
-    }
-    
-    #effects-toc-section, #favorite-effects-section {
-        /* These are now part of the sticky group, so they don't need to be sticky themselves */
-        position: static;
-    }    
-    #search-bar-container {
-        position: sticky;
-        top: 1.5rem; /* Should match preview-section top */
-        z-index: 10;
-        background-color: var(--surface-color);
-        padding-bottom: 1rem; /* Add some space below */
-    }
-    
-    #effects-toc {
-        position: sticky;
-        top: 1.5rem;
-    }
-    
-    .collapsible-header {
-        cursor: pointer;
-        position: relative;
-        padding-right: 2rem; /* Space for the icon */
-    }
-    
-    .collapsible-header::after {
-        content: '−';
-        position: absolute;
-        right: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        font-weight: bold;
-        font-size: 1.5rem;
-    }
-    
-    .collapsible-header.is-closed::after {
-        content: '+';
-    }
-    
-    .collapsible-content {
-        overflow: hidden;
-        transition: max-height 0.3s ease-in-out, padding-top 0.3s ease-in-out, margin-top 0.3s ease-in-out;
-        max-height: 2000px; /* Large value */
-    }
-    
-    .collapsible-content.is-closed {
-        max-height: 0;
-        padding-top: 0;
-        margin-top: 0;
-    }
+.settings-section {
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.preview-section {
+    grid-area: preview;
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    text-align: center;
+    position: sticky;
+    top: 1.5rem;
+}
+
+.preview-sticky-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.preview-sticky-content .setting-item {
+    display: flex;
+    gap: 1rem;
+}
+
+.preview-sticky-content .setting-item .button {
+    flex: 1;
+}
+
+.effects-section {
+    grid-area: effects;
+    padding: 20px;
+    background-color: #fff;
+    border-left: 1px solid #ddd;
+    overflow-y: auto;
+}
+
+.sticky-sidebar-group {
+    position: sticky;
+    top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem; /* Match the parent container's gap */
+}
+
+#effects-toc-section, #favorite-effects-section {
+    position: static;
+}
+
+#search-bar-container {
+    position: sticky;
+    top: 0; /* Stick to the top of the effects section */
+    z-index: 10;
+    background-color: var(--surface-color);
+    padding: 1rem 0; /* Adjust padding */
+}
+
+.collapsible-header {
+    cursor: pointer;
+    position: relative;
+    padding-right: 2rem; /* Space for the icon */
+}
+
+.collapsible-header::after {
+    content: '−';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+.collapsible-header.is-closed::after {
+    content: '+';
+}
+
+.collapsible-content {
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out, padding-top 0.3s ease-in-out, margin-top 0.3s ease-in-out;
+    max-height: 2000px; /* Large value */
+}
+
+.collapsible-content.is-closed {
+    max-height: 0;
+    padding-top: 0;
+    margin-top: 0;
+}
+
 #toc-content a {
     display: block;
     padding: 0.25rem 0;
@@ -309,11 +314,6 @@ input[type="text"], input[type="search"] {
     flex-direction: column;
 }
 
-.effect-group-header { 
-    background-color: #f8f9fa; 
-    border: 1px solid var(--border-color);
-}
-
 .effect-group-variants {
     padding-left: 1rem;
     margin-top: 5px;
@@ -478,6 +478,9 @@ input[type="text"], input[type="search"] {
 
 /* --- Deck Builder --- */
 .deck-builder-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
     align-items: flex-start; /* Align columns to the top */
 }
 
@@ -797,4 +800,18 @@ input[type="text"], input[type="search"] {
     display: flex;
     gap: 2px; /* ボタン間のスペース */
     margin-right: 10px; /* ボタンと効果名の間のスペース */
+}
+
+#effects-menu .effect-group-header {
+    background-color: #eaf2f8; /* 薄い青色 */
+    padding-left: 1.5rem; /* インデントを追加 */
+}
+
+#effects-menu .effect-group-header:hover {
+    background-color: #d4e6f1;
+}
+
+#effects-menu .effect-group-header.is-active-parent {
+    background-color: #aed6f1;
+    border-color: #aed6f1;
 }

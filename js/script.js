@@ -376,6 +376,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // 【奥義】が含まれている場合はチェックをスキップ
+        const hasOugi = state.activeEffects.some(e => e.name.includes('【奥義】'));
+        if (hasOugi) {
+            if (state.hasShownTriggerWarning) {
+                state.hasShownTriggerWarning = false;
+            }
+            return;
+        }
+
         const activeCategories = state.activeEffects.map(e => e.category);
         const nonBasicCategories = ['【01】召喚条件系', '【03】基礎効果系A', '【04】基礎効果系B'];
         const hasAdvancedEffect = activeCategories.some(c => c && !nonBasicCategories.includes(c));
@@ -422,11 +431,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const restrictions = categoryRestrictions[categoryName];
 
             if (restrictions) {
-                // This category has rules. Apply them.
                 const isDisabled = state.cardType && !restrictions.includes(state.cardType);
                 header.classList.toggle('disabled', isDisabled);
+
+                if (isDisabled) {
+                    header.nextElementSibling.classList.add('is-closed');
+                    header.classList.remove('is-open');
+                }
             } else {
-                // This is a common category. It should always be enabled.
                 header.classList.remove('disabled');
             }
         });
@@ -446,12 +458,43 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updateState = () => {
-        const cardTypeCost = state.cardType ? cardTypeData[state.cardType].cost : 0;
+        let cardTypeCost = state.cardType ? cardTypeData[state.cardType].cost : 0;
         state.effectCost = 0;
         for (const effect of state.activeEffects) {
             state.effectCost += effect.cost;
         }
         state.totalCost = state.atk + state.hp + state.effectCost + cardTypeCost - 4;
+
+        // 【強者】と【覇者】のコスト条件チェックと効果の削除
+        let modified = false;
+        const initialEffectCount = state.activeEffects.length;
+
+        const hasKyosha = state.activeEffects.some(e => e.name.includes('【強者】'));
+        if (hasKyosha && state.totalCost < 5) {
+            state.activeEffects = state.activeEffects.filter(e => !e.name.includes('【強者】'));
+            showNotification('合計コストが5未満になったため【強者】を削除しました。', 'warning');
+        }
+
+        const hasHasha = state.activeEffects.some(e => e.name.includes('【覇者】'));
+        if (hasHasha && state.totalCost < 9) {
+            state.activeEffects = state.activeEffects.filter(e => !e.name.includes('【覇者】'));
+            showNotification('合計コストが9未満になったため【覇者】を削除しました。', 'warning');
+        }
+        
+        if (initialEffectCount !== state.activeEffects.length) {
+            modified = true;
+        }
+
+        // 効果が削除された場合、コストを再計算
+        if (modified) {
+            cardTypeCost = state.cardType ? cardTypeData[state.cardType].cost : 0;
+            state.effectCost = 0;
+            for (const effect of state.activeEffects) {
+                state.effectCost += effect.cost;
+            }
+            state.totalCost = state.atk + state.hp + state.effectCost + cardTypeCost - 4;
+        }
+
         elements.effectCostTotal.textContent = state.effectCost;
         elements.totalCost.textContent = state.totalCost;
 
@@ -516,9 +559,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (description) return description;
         }
 
-        // スキルリンク：のパターンに対応
-        if (name === 'スキルリンク：') {
-            description = ruleDescriptions.get('スキルリンク');
+        // スキルリンクのパターンに対応
+        if (name.startsWith('スキルリンク')) {
+            description = ruleDescriptions.get('スキルリンクⅠ/Ⅱ/Ⅲ');
+            if (description) return description;
+        }
+
+        if (name.includes('【強者】')) {
+            description = ruleDescriptions.get('【強者】');
+            if (description) return description;
+        }
+        if (name.includes('【覇者】')) {
+            description = ruleDescriptions.get('【覇者】');
             if (description) return description;
         }
 
@@ -538,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         elements.effectsMenu.innerHTML = '';
-        for (const category in categories) {
+        Object.keys(categories).sort().forEach(category => {
             const categoryHeader = document.createElement('div');
             categoryHeader.className = 'category-header';
             categoryHeader.textContent = category;
@@ -588,7 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             elements.effectsMenu.appendChild(itemsContainer);
-        }
+        });
 
         // TOCの生成
         elements.tocContent.innerHTML = '';
@@ -790,6 +842,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!effect) return;
 
         if (isAdding) {
+            // 【強者】と【覇者】の制約チェック
+            if (effect.name.includes('【強者】')) {
+                if (state.totalCost < 5) {
+                    showNotification('【強者】は合計コストが5以上のカードにのみ付与できます。', 'error');
+                    return;
+                }
+            }
+            if (effect.name.includes('【覇者】')) {
+                if (state.totalCost < 9) {
+                    showNotification('【覇者】は合計コストが9以上のカードにのみ付与できます。', 'error');
+                    return;
+                }
+            }
+
             if (state.cardType) {
                 const restrictions = categoryRestrictions[effect.category];
                 if (restrictions && !restrictions.includes(state.cardType)) {
@@ -1153,29 +1219,159 @@ document.addEventListener('DOMContentLoaded', () => {
 
         
 
-                const setupStatusHandler = (name, min, max) => {
+                                const setupStatusHandler = (name, min, max) => {
 
-                    elements[name].increment.addEventListener('click', () => {
+        
 
-                        if (state[name] < max) state[name]++;
+                                    elements[name].increment.addEventListener('click', () => {
 
-                        elements[name].value.textContent = state[name];
+        
 
-                        updateState();
+                                        if (state[name] >= max) return;
 
-                    });
+        
 
-                    elements[name].decrement.addEventListener('click', () => {
+                                        const originalValue = state[name];
 
-                        if (state[name] > min) state[name]--;
+        
 
-                        elements[name].value.textContent = state[name];
+                                        const newValue = originalValue + 1;
 
-                        updateState();
+        
 
-                    });
+                
 
-                };
+        
+
+                                        const cardTypeCost = state.cardType ? cardTypeData[state.cardType].cost : 0;
+
+        
+
+                                        const tempTotalCost = (name === 'atk' ? newValue : state.atk) + (name === 'hp' ? newValue : state.hp) + state.effectCost + cardTypeCost - 4;
+
+        
+
+                                        const effectLimit = getEffectLimit(tempTotalCost);
+
+        
+
+                
+
+        
+
+                                        if (state.activeEffects.length > effectLimit) {
+
+        
+
+                                            showNotification(`ステータスを上げると効果数上限(${effectLimit}個)を超えてしまうため、変更できません。`, 'error');
+
+        
+
+                                            return;
+
+        
+
+                                        }
+
+        
+
+                
+
+        
+
+                                        state[name] = newValue;
+
+        
+
+                                        elements[name].value.textContent = state[name];
+
+        
+
+                                        updateState();
+
+        
+
+                                    });
+
+        
+
+                
+
+        
+
+                                    elements[name].decrement.addEventListener('click', () => {
+
+        
+
+                                        if (state[name] <= min) return;
+
+        
+
+                                        const originalValue = state[name];
+
+        
+
+                                        const newValue = originalValue - 1;
+
+        
+
+                
+
+        
+
+                                        const cardTypeCost = state.cardType ? cardTypeData[state.cardType].cost : 0;
+
+        
+
+                                        const tempTotalCost = (name === 'atk' ? newValue : state.atk) + (name === 'hp' ? newValue : state.hp) + state.effectCost + cardTypeCost - 4;
+
+        
+
+                                        const effectLimit = getEffectLimit(tempTotalCost);
+
+        
+
+                
+
+        
+
+                                        if (state.activeEffects.length > effectLimit) {
+
+        
+
+                                            showNotification(`ステータスを下げると効果数上限(${effectLimit}個)を超えてしまうため、変更できません。`, 'error');
+
+        
+
+                                            return;
+
+        
+
+                                        }
+
+        
+
+                
+
+        
+
+                                        state[name] = newValue;
+
+        
+
+                                        elements[name].value.textContent = state[name];
+
+        
+
+                                        updateState();
+
+        
+
+                                    });
+
+        
+
+                                };
 
                 setupStatusHandler('atk', 1, 9); setupStatusHandler('hp', 1, 9);
 
@@ -1591,6 +1787,54 @@ document.addEventListener('DOMContentLoaded', () => {
         const noGroupKeywords = ['2回攻撃'];
         const romanMap = { 'Ⅰ': 1, 'Ⅱ': 2, 'Ⅲ': 3, 'Ⅳ': 4, 'Ⅴ': 5 };
 
+        // 手動でグループ化するルールを定義
+        const manualGroupRules = {
+            'ブースト○': ['ブーストⅡ', 'ブーストⅢ'],
+            'ギガボディ/超ギガボディ': ['ギガボディ', '超ギガボディ'],
+            '【強者】/【覇者】': ['【強者】ATK+1/HP+1', '【覇者】ATK+3/HP+3']
+        };
+
+        // 逆引きマップを作成
+        const manualGroupMap = {};
+        for (const template in manualGroupRules) {
+            manualGroupRules[template].forEach(name => {
+                manualGroupMap[name] = template;
+            });
+        }
+
+        const manualGroups = {};
+        const remainingEffects = [];
+
+        // まず手動グループ化を試みる
+        effects.forEach(effect => {
+            const template = manualGroupMap[effect.name];
+            if (template) {
+                if (!manualGroups[template]) {
+                    manualGroups[template] = {
+                        isGroup: true,
+                        template: template,
+                        category: effect.category,
+                        variants: []
+                    };
+                }
+                manualGroups[template].variants.push(effect);
+            } else {
+                remainingEffects.push(effect);
+            }
+        });
+
+        // 手動グループをメインのマップに追加
+        for (const template in manualGroups) {
+            // ソート
+            manualGroups[template].variants.sort((a, b) => {
+                if (template === 'ブースト○') {
+                    return a.name.localeCompare(b.name); // Ⅱ, Ⅲ の順
+                }
+                return a.name.length - b.name.length; // 巨大, 超巨大 の順
+            });
+            effectGroups.set(template, manualGroups[template]);
+        }
+
         // 新しいグループ化パターンを定義
         const patterns = [
             {
@@ -1632,7 +1876,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         ];
 
-        effects.forEach(effect => {
+        remainingEffects.forEach(effect => {
             // isCustom の効果もグループ化の対象に含める
             if (noGroupKeywords.includes(effect.name)) {
                 effectGroups.set(effect.name, effect);
@@ -1688,7 +1932,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // グループ内のバリアントをソート
         effectGroups.forEach(group => {
-            if (group.isGroup) {
+            if (group.isGroup && !manualGroupRules[group.template]) { // 手動グループ以外をソート
                 group.variants.sort((a, b) => {
                     // 数値部分を抽出して比較
                     const getNum = (name) => {
@@ -2311,7 +2555,17 @@ document.addEventListener('DOMContentLoaded', () => {
             imageScale: state.imageScale,
             imagePosX: state.imagePosX,
             imagePosY: state.imagePosY,
-            activeEffectIds: state.activeEffects.map(effect => effect.id)
+            activeEffects: state.activeEffects.map(effect => ({
+                id: effect.id,
+                name: effect.name,
+                cost: effect.cost,
+                category: effect.category,
+                isCustom: effect.isCustom,
+                customType: effect.customType,
+                originalName: effect.originalName,
+                editableParts: effect.editableParts,
+                selectOptionsCost: effect.selectOptionsCost
+            }))
         };
     };
 
@@ -2331,16 +2585,18 @@ document.addEventListener('DOMContentLoaded', () => {
         state.imagePosX = savedState.imagePosX || 0;
         state.imagePosY = savedState.imagePosY || 0;
         
-        // Apply effects
-        const allOriginalEffects = state.allEffects.flatMap(e => e.isGroup ? e.variants : e);
-        if (savedState.activeEffectIds) {
-            savedState.activeEffectIds.forEach(id => {
-                const effect = allOriginalEffects.find(e => e.id === id);
-                if (effect) {
-                    state.activeEffects.push({ ...effect });
-                    // テンプレートを持つ効果の場合、activeTemplateMapも更新
-                    if (effect.template) { // effectオブジェクト自体にtemplateプロパティがあるか確認
-                        state.activeTemplateMap.set(effect.template, id);
+        // Apply effects from the detailed saved data
+        if (savedState.activeEffects) {
+            const allOriginalEffects = state.allEffects.flatMap(e => e.isGroup ? e.variants : e);
+            savedState.activeEffects.forEach(savedEffect => {
+                state.activeEffects.push({ ...savedEffect });
+
+                // Restore template map
+                const originalEffect = allOriginalEffects.find(e => e.id === savedEffect.id);
+                if (originalEffect) {
+                    const group = state.allEffects.find(g => g.isGroup && g.variants.some(v => v.id === savedEffect.id));
+                    if (group) {
+                        state.activeTemplateMap.set(group.template, savedEffect.id);
                     }
                 }
             });
