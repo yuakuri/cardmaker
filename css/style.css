@@ -377,7 +377,10 @@ input[type="text"], input[type="search"] {
 
 /* --- Responsive Design --- */
 @media (max-width: 1200px) {
-    .app-container { flex-direction: column; }
+    .app-container {
+        display: flex;
+        flex-direction: column;
+    }
     .settings-section, .preview-section, .effects-section { 
         flex: 1; 
         min-width: initial;

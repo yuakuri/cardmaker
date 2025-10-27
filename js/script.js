@@ -772,13 +772,24 @@ document.addEventListener('DOMContentLoaded', () => {
         lastPos: null,
         lastDist: null,
         isPanning: false,
-        isPinching: false
+        isPinching: false,
+        renderScheduled: false
     };
 
     function getTouchDistance(touches) {
         const dx = touches[0].clientX - touches[1].clientX;
         const dy = touches[0].clientY - touches[1].clientY;
         return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function scheduleRender() {
+        if (!touchState.renderScheduled) {
+            touchState.renderScheduled = true;
+            requestAnimationFrame(() => {
+                render();
+                touchState.renderScheduled = false;
+            });
+        }
     }
 
     function handleTouchStart(e) {
@@ -806,7 +817,7 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.imagePosY.value = state.imagePosY;
 
             touchState.lastPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            render();
+            scheduleRender();
         } else if (touchState.isPinching && e.touches.length === 2) {
             const newDist = getTouchDistance(e.touches);
             const scaleChange = newDist / touchState.lastDist;
@@ -816,7 +827,7 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.imageZoom.value = state.imageScale;
 
             touchState.lastDist = newDist;
-            render();
+            scheduleRender();
         }
     }
 
@@ -830,6 +841,7 @@ document.addEventListener('DOMContentLoaded', () => {
             touchState.isPanning = false;
             touchState.lastPos = null;
         }
+        scheduleRender(); // Ensure a final render on touch end
     }
 
     const getEffectLimit = (cost) => {
