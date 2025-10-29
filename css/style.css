@@ -485,6 +485,12 @@ input[type="text"], input[type="search"] {
     align-items: flex-start; /* Align columns to the top */
 }
 
+@media (max-width: 900px) {
+    .deck-builder-container {
+        grid-template-columns: 1fr;
+    }
+}
+
 .deck-builder-column {
     flex: 1;
     min-width: 300px;
@@ -816,3 +822,5 @@ input[type="text"], input[type="search"] {
     background-color: #aed6f1;
     border-color: #aed6f1;
 }
+
+

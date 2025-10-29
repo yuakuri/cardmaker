@@ -104,6 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
         cardName: '',
         cardRuby: '',
         cardNameSize: 48,
+        baseAtk: 2,
+        baseHp: 2,
         atk: 2,
         hp: 2,
         leaderHp: 20, // 固定値
@@ -178,33 +180,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000); // Matches CSS animation duration
     }
 
-    const cardTypeData = {
-        "ユニット": { cost: 0, color: "#ff5555" },
-        "スキル":   { cost: -1, color: "#5555ff" },
-        "トラップ": { cost: 0, color: "#800080" },
-        "建物":     { cost: 1, color: "#32cd32" },
-        "武器":     { cost: 0, color: "#ff9900" },
-        "防具":     { cost: 1, color: "#00ced1" },
-        "リーダー": { cost: 0, color: "#333333" },
-    };
-
-    const cardTypeSummaries = {
-        "ユニット": "攻撃と防御の要となる、場に出して戦うカード。",
-        "スキル": "使い切りで即座に効果を発動するカード。",
-        "トラップ": "条件を満たすと相手のターン中でも割り込んで発動できるカード。",
-        "建物": "場に残り続け、お互いに毎ターン効果を発動できるカード。",
-        "武器": "リーダーが装備し、自身のATKで攻撃できるようになるカード。",
-        "防具": "リーダーが装備し、受けるダメージを肩代わりするカード。",
-        "リーダー": "ゲームの主役となる、プレイヤー自身を表す特別なカード。"
-    };
-
-    const categoryRestrictions = {
-        "【01】召喚条件系": ["ユニット", "建物", "武器", "防具"],
-        "【02】使用条件系": ["スキル", "リーダー", "トラップ"],
-        "【03】基礎効果系A": ["ユニット", "武器", "防具"],
-        "【04】基礎効果系B": ["ユニット", "スキル", "トラップ", "建物", "武器", "防具"],
-        "【05】発動条件系": ["ユニット", "武器", "防具"],
-        "【13】トラップ専用": ["トラップ"],
+    const constants = {
+        cardTypeData: {
+            "ユニット": { cost: 0, color: "#ff5555" },
+            "スキル":   { cost: -1, color: "#5555ff" },
+            "トラップ": { cost: 0, color: "#800080" },
+            "建物":     { cost: 1, color: "#32cd32" },
+            "武器":     { cost: 0, color: "#ff9900" },
+            "防具":     { cost: 1, color: "#00ced1" },
+            "リーダー": { cost: 0, color: "#333333" },
+        },
+        cardTypeSummaries: {
+            "ユニット": "攻撃と防御の要となる、場に出して戦うカード。",
+            "スキル": "使い切りで即座に効果を発動するカード。",
+            "トラップ": "条件を満たすと相手のターン中でも割り込んで発動できるカード。",
+            "建物": "場に残り続け、お互いに毎ターン効果を発動できるカード。",
+            "武器": "リーダーが装備し、自身のATKで攻撃できるようになるカード。",
+            "防具": "リーダーが装備し、受けるダメージを肩代わりするカード。",
+            "リーダー": "ゲームの主役となる、プレイヤー自身を表す特別なカード。"
+        },
+        categoryRestrictions: {
+            "【01】召喚条件系": ["ユニット", "建物", "武器", "防具"],
+            "【02】使用条件系": ["スキル", "リーダー", "トラップ"],
+            "【03】基礎効果系A": ["ユニット", "武器", "防具"],
+            "【04】基礎効果系B": ["ユニット", "スキル", "トラップ", "建物", "武器", "防具"],
+            "【05】発動条件系": ["ユニット", "武器", "防具"],
+            "【13】トラップ専用": ["トラップ"],
+        }
     };
 
     // --- 描画関数 ---
@@ -212,6 +214,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const borderWidth = 10;
         const bottomBarHeight = 70;
         ctx.clearRect(0, 0, elements.canvas.width, elements.canvas.height);
+
+        // 背景を白で塗りつぶす
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, elements.canvas.width, elements.canvas.height);
 
         // 1. 画像を描画
         if (state.uploadedImage && state.uploadedImage.complete) {
@@ -227,8 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 2. 縁を描画
-        if (state.cardType && cardTypeData[state.cardType]) {
-            ctx.fillStyle = cardTypeData[state.cardType].color;
+        if (state.cardType && constants.cardTypeData[state.cardType]) {
+            ctx.fillStyle = constants.cardTypeData[state.cardType].color;
             ctx.fillRect(0, 0, elements.canvas.width, borderWidth); // Top
             ctx.fillRect(0, 0, borderWidth, elements.canvas.height); // Left
             ctx.fillRect(elements.canvas.width - borderWidth, 0, borderWidth, elements.canvas.height); // Right
@@ -316,8 +322,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const yPos = elements.canvas.height - barHeight;
         const textY = yPos + barHeight / 2;
 
-        if (state.cardType && cardTypeData[state.cardType]) {
-            ctx.fillStyle = cardTypeData[state.cardType].color;
+        if (state.cardType && constants.cardTypeData[state.cardType]) {
+            ctx.fillStyle = constants.cardTypeData[state.cardType].color;
             ctx.fillRect(0, yPos, elements.canvas.width, barHeight);
         }
 
@@ -339,9 +345,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (state.showHp) {
             ctx.font = '900 40px "Noto Sans JP", serif';
-            ctx.fillText('HP', 495, textY);
+            // HPが2桁になったら左にずらす
+            const shiftX = state.hp >= 10 ? 25 : 0;
+            ctx.fillText('HP', 495 - shiftX, textY);
             ctx.font = '900 64px "Noto Sans JP", serif';
-            ctx.fillText(state.hp, 560, textY);
+            ctx.fillText(state.hp, 560 - shiftX, textY);
         }
         if (state.showLeaderHp) {
             ctx.font = '900 40px "Noto Sans JP", serif';
@@ -416,7 +424,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const type = button.dataset.type;
             let isCompatible = true;
             for (const category of activeCategories) {
-                const restrictions = categoryRestrictions[category];
+                const restrictions = constants.categoryRestrictions[category];
                 if (restrictions && !restrictions.includes(type)) {
                     isCompatible = false;
                     break;
@@ -428,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 効果カテゴリの有効/無効を切り替え
         elements.effectsMenu.querySelectorAll('.category-header').forEach(header => {
             const categoryName = header.textContent.trim();
-            const restrictions = categoryRestrictions[categoryName];
+            const restrictions = constants.categoryRestrictions[categoryName];
 
             if (restrictions) {
                 const isDisabled = state.cardType && !restrictions.includes(state.cardType);
@@ -458,12 +466,51 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const updateState = () => {
-        let cardTypeCost = state.cardType ? cardTypeData[state.cardType].cost : 0;
+        const hasBlank = state.activeEffects.some(e => e.name.includes('【ブランク】'));
+
+        // 【ブランク】がない場合、ステータスを9に制限する
+        if (!hasBlank) {
+            if (state.baseAtk > 9) {
+                state.baseAtk = 9;
+                showNotification('【ブランク】がないため、ATKを9に設定しました。', 'warning');
+            }
+            if (state.baseHp > 9) {
+                state.baseHp = 9;
+                showNotification('【ブランク】がないため、HPを9に設定しました。', 'warning');
+            }
+        }
+
+        const hasBlankAfterCheck = state.activeEffects.some(e => e.name.includes('【ブランク】'));
+
+        // 効果コストの計算
         state.effectCost = 0;
         for (const effect of state.activeEffects) {
             state.effectCost += effect.cost;
         }
-        state.totalCost = state.atk + state.hp + state.effectCost + cardTypeCost - 4;
+
+        const cardTypeCost = state.cardType ? constants.cardTypeData[state.cardType].cost : 0;
+
+        // 合計コストは常にbaseAtkとbaseHpを元に計算
+        state.totalCost = state.baseAtk + state.baseHp + state.effectCost + cardTypeCost - 4;
+
+        if (hasBlank) {
+            // 【ブランク】有効時
+            // 1. 【ブランク】によって加算されるコストを計算（これは現在の合計コスト）
+            const costForBlank = state.totalCost;
+            
+            // 2. ATK/HPを更新
+            state.atk = state.baseAtk + costForBlank;
+            state.hp = state.baseHp + costForBlank;
+
+        } else {
+            // 【ブランク】無効時 (通常の処理)
+            state.atk = state.baseAtk;
+            state.hp = state.baseHp;
+        }
+
+        // UIの値を更新
+        elements.atk.value.textContent = state.atk;
+        elements.hp.value.textContent = state.hp;
 
         // 【強者】と【覇者】のコスト条件チェックと効果の削除
         let modified = false;
@@ -487,12 +534,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 効果が削除された場合、コストを再計算
         if (modified) {
-            cardTypeCost = state.cardType ? cardTypeData[state.cardType].cost : 0;
             state.effectCost = 0;
             for (const effect of state.activeEffects) {
                 state.effectCost += effect.cost;
             }
-            state.totalCost = state.atk + state.hp + state.effectCost + cardTypeCost - 4;
+            // コストとATK/HPを再計算
+            state.totalCost = state.baseAtk + state.baseHp + state.effectCost + cardTypeCost - 4;
+            if (hasBlank) {
+                const costForBlank = state.totalCost;
+                state.atk = state.baseAtk + costForBlank;
+                state.hp = state.baseHp + costForBlank;
+            } else {
+                state.atk = state.baseAtk;
+                state.hp = state.baseHp;
+            }
+            elements.atk.value.textContent = state.atk;
+            elements.hp.value.textContent = state.hp;
         }
 
         elements.effectCostTotal.textContent = state.effectCost;
@@ -575,12 +632,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- UI生成関数 ---
     const createCardTypeButtons = () => {
-        Object.keys(cardTypeData).forEach(type => {
+        Object.keys(constants.cardTypeData).forEach(type => {
             const button = document.createElement('button');
             button.textContent = type;
             button.dataset.type = type;
             
-            const description = cardTypeSummaries[type];
+            const description = constants.cardTypeSummaries[type];
             if (description) {
                 button.dataset.tooltip = description;
             }
@@ -738,6 +795,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     let selectHTML = `<select class="editable-part" data-part-index="0">`;
                     options.forEach(option => {
                         const selected = (option === effect.editableParts[0]) ? 'selected' : '';
+                        selectHTML += `<option value="${option}" ${selected}>${option}</option>`;
                         selectHTML += `<option value="${option}" ${selected}>${option}</option>`;
                     });
                     selectHTML += `</select>`;
@@ -924,8 +982,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            // 【ブランク】の排他処理
+            if (effect.name.includes('【ブランク】')) {
+                if (state.activeEffects.length > 0) {
+                    const confirmClear = confirm('【ブランク】を追加すると他の全ての効果が削除されます。よろしいですか？');
+                    if (confirmClear) {
+                        state.activeEffects = [];
+                        state.activeTemplateMap.clear();
+                    } else {
+                        return; // 追加をキャンセル
+                    }
+                }
+            } else if (state.activeEffects.some(e => e.name.includes('【ブランク】'))) {
+                showNotification('【ブランク】が選択されているため、他の効果は追加できません。', 'error');
+                return;
+            }
+
             if (state.cardType) {
-                const restrictions = categoryRestrictions[effect.category];
+                const restrictions = constants.categoryRestrictions[effect.category];
                 if (restrictions && !restrictions.includes(state.cardType)) {
                     showNotification(`選択中のカードタイプ「${state.cardType}」には、カテゴリ「${effect.category}」の効果は追加できません。`, 'error');
                     return;
@@ -943,7 +1017,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-            const cardTypeCost = state.cardType ? cardTypeData[state.cardType].cost : 0;
+            const cardTypeCost = state.cardType ? constants.cardTypeData[state.cardType].cost : 0;
             const potentialEffectCost = state.effectCost + costChange;
             const potentialTotalCost = state.atk + state.hp + potentialEffectCost + cardTypeCost - 4;
             const effectLimit = getEffectLimit(potentialTotalCost);
@@ -972,13 +1046,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     effectToAdd.name = effect.name.replace(grantEffectRegex, defaultOption);
 
                 } else {
-                                    const textRegex = /(X\(カード名or〇〇族\))|(X\(カード名\))|(X族)/g;
-                                    if (effect.name.match(textRegex)) {
-                                        effectToAdd.customType = 'text';
-                                        effectToAdd.originalName = effect.name;
-                                        const numParts = (effect.name.match(textRegex) || []).length;
-                                        effectToAdd.editableParts = Array(numParts).fill('');
-                                    }                }
+                    const textRegex = /(X\(カード名or〇〇族\))|(X\(カード名\))|(X族)/g;
+                    if (effect.name.match(textRegex)) {
+                        effectToAdd.customType = 'text';
+                        effectToAdd.originalName = effect.name;
+                        const numParts = (effect.name.match(textRegex) || []).length;
+                        effectToAdd.editableParts = Array(numParts).fill('');
+                    }
+                }
             }
             state.activeEffects.push(effectToAdd);
         };
@@ -1215,6 +1290,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     state.cardType = state.cardType === type ? null : type;
 
+
+
+                    // ATK/HPの基礎値をリセット
+
+                    state.baseAtk = 2;
+
+                    state.baseHp = 2;
+
+
+
                     elements.cardTypeButtonsContainer.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
 
                     if (state.cardType) e.target.classList.add('active');
@@ -1245,9 +1330,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // まず全てのステータスを表示状態に戻す
 
-                    setStatus(true, state.atk, 'atk');
+                    setStatus(true, state.baseAtk, 'atk');
 
-                    setStatus(true, state.hp, 'hp');
+                    setStatus(true, state.baseHp, 'hp');
 
         
 
@@ -1287,161 +1372,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
         
 
-                                const setupStatusHandler = (name, min, max) => {
+                                const setupStatusHandler = (name, min) => {
 
         
 
                                     elements[name].increment.addEventListener('click', () => {
 
-        
+                                        const baseName = `base${name.charAt(0).toUpperCase() + name.slice(1)}`;
 
-                                        if (state[name] >= max) return;
+                                        const hasBlank = state.activeEffects.some(e => e.name.includes('【ブランク】'));
 
-        
+                                        const max = hasBlank ? 99 : 9;
 
-                                        const originalValue = state[name];
+                                        if (state[baseName] >= max) {
 
-        
-
-                                        const newValue = originalValue + 1;
-
-        
-
-                
-
-        
-
-                                        const cardTypeCost = state.cardType ? cardTypeData[state.cardType].cost : 0;
-
-        
-
-                                        const tempTotalCost = (name === 'atk' ? newValue : state.atk) + (name === 'hp' ? newValue : state.hp) + state.effectCost + cardTypeCost - 4;
-
-        
-
-                                        const effectLimit = getEffectLimit(tempTotalCost);
-
-        
-
-                
-
-        
-
-                                        if (state.activeEffects.length > effectLimit) {
-
-        
-
-                                            showNotification(`ステータスを上げると効果数上限(${effectLimit}個)を超えてしまうため、変更できません。`, 'error');
-
-        
+                                            showNotification('【ブランク】がない場合、ステータスは9までです。', 'warning');
 
                                             return;
 
-        
-
                                         }
 
-        
-
-                
-
-        
-
-                                        state[name] = newValue;
-
-        
-
-                                        elements[name].value.textContent = state[name];
-
-        
+                                        state[baseName]++;
 
                                         updateState();
 
-        
-
                                     });
-
-        
-
-                
 
         
 
                                     elements[name].decrement.addEventListener('click', () => {
 
-        
+                                        const baseName = `base${name.charAt(0).toUpperCase() + name.slice(1)}`;
 
-                                        if (state[name] <= min) return;
+                                        if (state[baseName] <= min) return;
 
-        
-
-                                        const originalValue = state[name];
-
-        
-
-                                        const newValue = originalValue - 1;
-
-        
-
-                
-
-        
-
-                                        const cardTypeCost = state.cardType ? cardTypeData[state.cardType].cost : 0;
-
-        
-
-                                        const tempTotalCost = (name === 'atk' ? newValue : state.atk) + (name === 'hp' ? newValue : state.hp) + state.effectCost + cardTypeCost - 4;
-
-        
-
-                                        const effectLimit = getEffectLimit(tempTotalCost);
-
-        
-
-                
-
-        
-
-                                        if (state.activeEffects.length > effectLimit) {
-
-        
-
-                                            showNotification(`ステータスを下げると効果数上限(${effectLimit}個)を超えてしまうため、変更できません。`, 'error');
-
-        
-
-                                            return;
-
-        
-
-                                        }
-
-        
-
-                
-
-        
-
-                                        state[name] = newValue;
-
-        
-
-                                        elements[name].value.textContent = state[name];
-
-        
+                                        state[baseName]--;
 
                                         updateState();
 
-        
-
                                     });
-
-        
 
                                 };
 
-                setupStatusHandler('atk', 1, 9); setupStatusHandler('hp', 1, 9);
+                setupStatusHandler('atk', 1); setupStatusHandler('hp', 1);
 
         
 
