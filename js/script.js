@@ -418,12 +418,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 更新・計算関数 ---
     const updateUIAvailability = () => {
         const activeCategories = new Set(Array.from(state.activeEffects.values()).map(e => e.category));
+        const isGrantingEffectMode = state.activeEffects.some(e => e.name === '対象に以下の効果を付与する');
 
         // カードタイプの有効/無効を切り替え
         elements.cardTypeButtonsContainer.querySelectorAll('button').forEach(button => {
             const type = button.dataset.type;
             let isCompatible = true;
             for (const category of activeCategories) {
+                // 「効果付与モード」で、チェック対象のカテゴリが「発動条件系」なら、このカテゴリの制限は無視する
+                if (isGrantingEffectMode && category === '【05】発動条件系') {
+                    continue;
+                }
+
                 const restrictions = constants.categoryRestrictions[category];
                 if (restrictions && !restrictions.includes(type)) {
                     isCompatible = false;
@@ -439,7 +445,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const restrictions = constants.categoryRestrictions[categoryName];
 
             if (restrictions) {
-                const isDisabled = state.cardType && !restrictions.includes(state.cardType);
+                let isDisabled = state.cardType && !restrictions.includes(state.cardType);
+                // 「効果付与モード」で「発動条件系」カテゴリの場合は無効化しない
+                if (isDisabled && isGrantingEffectMode && categoryName === '【05】発動条件系') {
+                    isDisabled = false;
+                }
                 header.classList.toggle('disabled', isDisabled);
 
                 if (isDisabled) {
@@ -609,6 +619,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const handleGrantingEffectRemoval = () => {
+        // 現在のカードタイプで本来許可されていない「発動条件系」の効果を削除する
+        if (!state.cardType) return;
+
+        const triggerRestrictions = constants.categoryRestrictions['【05】発動条件系'];
+        if (triggerRestrictions && !triggerRestrictions.includes(state.cardType)) {
+            // 現在のカードタイプでは「発動条件系」が許可されていない場合
+            const initialCount = state.activeEffects.length;
+            state.activeEffects = state.activeEffects.filter(e => e.category !== '【05】発動条件系');
+            if (state.activeEffects.length < initialCount) {
+                showNotification('「対象に以下の効果を付与する」を削除したため、関連する「発動条件系」の効果を削除しました。', 'info');
+            }
+        }
+    };
+
     const validateOugiCost = () => {
         let ougiIndex = -1;
         state.activeEffects.forEach((effect, index) => {
@@ -699,8 +724,12 @@ document.addEventListener('DOMContentLoaded', () => {
             categories[category].push(effect);
         });
 
+        const sortedCategories = Object.keys(categories).sort((a, b) => 
+            a.localeCompare(b, 'ja', { numeric: true, sensitivity: 'base' })
+        );
+
         elements.effectsMenu.innerHTML = '';
-        Object.keys(categories).sort().forEach(category => {
+        sortedCategories.forEach(category => {
             const categoryHeader = document.createElement('div');
             categoryHeader.className = 'category-header';
             categoryHeader.textContent = category;
@@ -754,13 +783,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // TOCの生成
         elements.tocContent.innerHTML = '';
-        for (const category in categories) {
+        sortedCategories.forEach(category => {
             const link = document.createElement('a');
             link.href = '#';
             link.textContent = category;
             link.dataset.category = category;
             elements.tocContent.appendChild(link);
-        }
+        });
     };
 
     const renderSelectedEffects = () => {
@@ -1000,9 +1029,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (state.cardType) {
                 const restrictions = constants.categoryRestrictions[effect.category];
+                const isGrantingEffectMode = state.activeEffects.some(e => e.name === '対象に以下の効果を付与する');
+                const isAddingTriggerEffect = effect.category === '【05】発動条件系';
+
                 if (restrictions && !restrictions.includes(state.cardType)) {
-                    showNotification(`選択中のカードタイプ「${state.cardType}」には、カテゴリ「${effect.category}」の効果は追加できません。`, 'error');
-                    return;
+                    // 制限に違反しているが、「効果付与モード」で「発動条件系」を追加する場合は許可
+                    if (!isGrantingEffectMode || !isAddingTriggerEffect) {
+                        showNotification(`選択中のカードタイプ「${state.cardType}」には、カテゴリ「${effect.category}」の効果は追加できません。`, 'error');
+                        return;
+                    }
                 }
             }
             let costChange = effect.cost;
@@ -1058,11 +1093,16 @@ document.addEventListener('DOMContentLoaded', () => {
             state.activeEffects.push(effectToAdd);
         };
 
+        const effectToRemove = state.activeEffects.find(e => e.id === id);
+
         if (template) {
             const activeIdInGroup = state.activeTemplateMap.get(template);
             if (activeIdInGroup === id) {
                 state.activeEffects = state.activeEffects.filter(e => e.id !== id);
                 state.activeTemplateMap.delete(template);
+                if (effectToRemove && effectToRemove.name === '対象に以下の効果を付与する') {
+                    handleGrantingEffectRemoval();
+                }
             } else {
                 if (activeIdInGroup) {
                     state.activeEffects = state.activeEffects.filter(e => e.id !== activeIdInGroup);
@@ -1073,6 +1113,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             if (state.activeEffects.some(e => e.id === id)) {
                 state.activeEffects = state.activeEffects.filter(e => e.id !== id);
+                if (effectToRemove && effectToRemove.name === '対象に以下の効果を付与する') {
+                    handleGrantingEffectRemoval();
+                }
             } else {
                 addEffect(effect);
             }
@@ -1283,91 +1326,59 @@ document.addEventListener('DOMContentLoaded', () => {
         
 
                 elements.cardTypeButtonsContainer.addEventListener('click', e => {
-
                     if (e.target.tagName !== 'BUTTON' || e.target.classList.contains('disabled')) return;
-
                     const type = e.target.dataset.type;
-
                     state.cardType = state.cardType === type ? null : type;
 
-
-
-                    // ATK/HPの基礎値をリセット
-
-                    state.baseAtk = 2;
-
-                    state.baseHp = 2;
-
-
-
                     elements.cardTypeButtonsContainer.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
-
                     if (state.cardType) e.target.classList.add('active');
 
-        
+                    // ステータスの表示フラグをデフォルト(表示)に設定
+                    let showAtk = true;
+                    let showHp = true;
+                    let showLeaderHp = false;
 
-                    const setStatus = (show, value, name) => {
-
-                        state[name] = value;
-
-                        state[`show${name.charAt(0).toUpperCase() + name.slice(1)}`] = show;
-
-                        elements[name].value.textContent = value;
-
-        
-
-                        const controlWrapper = elements[name].value.closest('.status-item');
-
-                        if (controlWrapper) {
-
-                            controlWrapper.style.display = show ? '' : 'none';
-
-                        }
-
-                    };
-
-        
-
-                    // まず全てのステータスを表示状態に戻す
-
-                    setStatus(true, state.baseAtk, 'atk');
-
-                    setStatus(true, state.baseHp, 'hp');
-
-        
-
-                    state.showLeaderHp = (state.cardType === 'リーダー');
-
-        
-
+                    // カードタイプに応じて表示フラグとリセット処理を決定
                     switch (state.cardType) {
-
                         case '防具':
-
-                            setStatus(false, 2, 'atk');
-
+                            showAtk = false;
+                            state.baseAtk = 2; // 非表示にするのでbaseをリセット
                             break;
-
                         case '建物':
-
                         case 'スキル':
-
                         case 'トラップ':
-
-                        case 'リーダー':
-
-                            setStatus(false, 2, 'atk');
-
-                            setStatus(false, 2, 'hp');
-
+                            showAtk = false;
+                            showHp = false;
+                            state.baseAtk = 2;
+                            state.baseHp = 2;
                             break;
-
+                        case 'リーダー':
+                            showAtk = false;
+                            showHp = false;
+                            showLeaderHp = true;
+                            state.baseAtk = 2;
+                            state.baseHp = 2;
+                            break;
                     }
 
-        
+                    // stateのshowフラグを更新
+                    state.showAtk = showAtk;
+                    state.showHp = showHp;
+                    state.showLeaderHp = showLeaderHp;
+
+                    // UIコントロールの表示/非表示を更新
+                    const setVisibility = (name, show) => {
+                        const control = elements[name].value.closest('.status-item');
+                        if (control) {
+                            control.style.display = show ? '' : 'none';
+                        }
+                    };
+
+                    setVisibility('atk', state.showAtk);
+                    setVisibility('hp', state.showHp);
+                    setVisibility('leaderHp', state.showLeaderHp);
 
                     updateState();
-
                 });
 
         
@@ -1561,7 +1572,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (e.target.classList.contains('remove-effect-button')) {
                 const idToRemove = parseInt(effectItem.dataset.id, 10);
+                const removedEffect = state.activeEffects.find(e => e.id === idToRemove);
+
                 state.activeEffects = state.activeEffects.filter(effect => effect.id !== idToRemove);
+
+                if (removedEffect && removedEffect.name === '対象に以下の効果を付与する') {
+                    handleGrantingEffectRemoval();
+                }
+
                 // テンプレート効果の場合、activeTemplateMapからも削除
                 for (const [template, id] of state.activeTemplateMap.entries()) {
                     if (id === idToRemove) {
@@ -1725,6 +1743,10 @@ document.addEventListener('DOMContentLoaded', () => {
             validateAndNotify(true);
             if (!state.cardType) {
                 showNotification('先にカードタイプを選択してください。', 'error');
+                return;
+            }
+            if (state.cardType === 'リーダー' && state.totalCost <= 1) {
+                showNotification('リーダーカードの合計コストは2以上でなければなりません。', 'error');
                 return;
             }
             if (state.totalCost > 10) {
@@ -2599,8 +2621,10 @@ document.addEventListener('DOMContentLoaded', () => {
             cardName: state.cardName,
             cardRuby: state.cardRuby,
             cardNameSize: state.cardNameSize,
-            atk: state.atk,
-            hp: state.hp,
+            baseAtk: state.baseAtk,
+            baseHp: state.baseHp,
+            atk: state.atk, // Backwards compatibility
+            hp: state.hp,   // Backwards compatibility
             cardType: state.cardType,
             imageScale: state.imageScale,
             imagePosX: state.imagePosX,
@@ -2628,8 +2652,8 @@ document.addEventListener('DOMContentLoaded', () => {
         state.cardName = savedState.cardName || '';
         state.cardRuby = savedState.cardRuby || '';
         state.cardNameSize = savedState.cardNameSize || 64;
-        state.atk = savedState.atk || 2;
-        state.hp = savedState.hp || 2;
+        state.baseAtk = savedState.baseAtk || savedState.atk || 2;
+        state.baseHp = savedState.baseHp || savedState.hp || 2;
         state.cardType = savedState.cardType || null;
         state.imageScale = savedState.imageScale || 1;
         state.imagePosX = savedState.imagePosX || 0;
