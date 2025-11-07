@@ -520,7 +520,6 @@ document.addEventListener('DOMContentLoaded', () => {
             state.hp = state.baseHp;
         }
 
-        // UIの値を更新
         elements.atk.value.textContent = state.atk;
         elements.hp.value.textContent = state.hp;
 
@@ -575,6 +574,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             elements.totalCost.style.color = '';
         }
+
+        // レギュレーションがLevel1で、カードタイプがリーダーの場合、リーダーHPを15に設定
+        if (state.currentLevel === 'level1' && state.cardType === 'リーダー') {
+            state.leaderHp = 15;
+        } else {
+            // それ以外の場合はデフォルトの20に戻す
+            state.leaderHp = 20;
+        }
+        elements.leaderHp.value.textContent = state.leaderHp;
 
         updateAccordionHighlights();
         updateUIAvailability();
