@@ -101,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 状態管理オブジェクト
     const state = {
+        currentLevel: 'level1',
         cardName: '',
         cardRuby: '',
         cardNameSize: 48,
@@ -128,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // DOM要素のキャッシュ
     const elements = {
+        levelSelectorButtons: document.getElementById('level-selector-buttons'),
         cardNameInput: document.getElementById('card-name-input'),
         cardRubyInput: document.getElementById('card-ruby-input'),
         cardNameSizeGroup: document.getElementById('card-name-size-group'),
@@ -565,7 +567,10 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.effectCostTotal.textContent = state.effectCost;
         elements.totalCost.textContent = state.totalCost;
 
-        if (state.cardType === 'リーダー' && state.totalCost <= 1) {
+        if (state.currentLevel === 'level1' && state.totalCost >= 6) {
+            elements.totalCost.style.color = 'red';
+            showNotification('合計コストが6以上です。Level1レギュレーションでは5以下にする必要があります。', 'error');
+        } else if (state.cardType === 'リーダー' && state.totalCost <= 1) {
             elements.totalCost.style.color = 'red';
         } else {
             elements.totalCost.style.color = '';
@@ -997,6 +1002,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!effect) return;
 
         if (isAdding) {
+            if (state.currentLevel === 'level1') {
+                if (state.activeEffects.length >= 3) {
+                    showNotification('Level1レギュレーションでは効果を3つまでつけられます。', 'error');
+                    return;
+                }
+            }
+
             // 【強者】と【覇者】の制約チェック
             if (effect.name.includes('【強者】')) {
                 if (state.totalCost < 5) {
@@ -1054,7 +1066,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const cardTypeCost = state.cardType ? constants.cardTypeData[state.cardType].cost : 0;
             const potentialEffectCost = state.effectCost + costChange;
-            const potentialTotalCost = state.atk + state.hp + potentialEffectCost + cardTypeCost - 4;
+            const potentialTotalCost = state.baseAtk + state.baseHp + potentialEffectCost + cardTypeCost - 4;
+
+            if (state.currentLevel === 'level1' && potentialTotalCost >= 6) {
+                showNotification('Level1の合計コストが6以上になるため、この効果は追加できません。', 'error');
+                return;
+            }
+
             const effectLimit = getEffectLimit(potentialTotalCost);
             const potentialEffectCount = state.activeEffects.length + effectCountChange;
             if (potentialEffectCount > effectLimit) {
@@ -1197,7 +1215,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const setupEventListeners = () => {
 
-        
+                    elements.levelSelectorButtons.addEventListener('click', e => {
+                        if (e.target.tagName !== 'BUTTON') return;
+                        const level = e.target.dataset.level;
+                        if (level === state.currentLevel) return;
+
+                        state.currentLevel = level;
+                        elements.levelSelectorButtons.querySelector('.active')?.classList.remove('active');
+                        e.target.classList.add('active');
+
+                        // Reset card state
+                        state.cardName = '';
+                        state.cardRuby = '';
+                        state.cardType = null;
+                        state.activeEffects = [];
+                        state.activeTemplateMap.clear();
+                        state.baseAtk = 2;
+                        state.baseHp = 2;
+                        
+                        elements.cardNameInput.value = '';
+                        elements.cardRubyInput.value = '';
+                        elements.cardTypeButtonsContainer.querySelectorAll('.active').forEach(b => b.classList.remove('active'));
+
+                        loadEffects(level);
+                        showNotification(`レギュレーションを Level ${level.slice(-1)} に切り替えました。`, 'info');
+                    });
 
                     elements.cardNameInput.addEventListener('input', e => { state.cardName = e.target.value; render(); });
 
@@ -1740,6 +1782,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         elements.saveButton.addEventListener('click', () => {
+            if (state.currentLevel === 'level1' && state.totalCost >= 6) {
+                showNotification('合計コストが6以上のため保存できません。', 'error');
+                return;
+            }
             validateAndNotify(true);
             if (!state.cardType) {
                 showNotification('先にカードタイプを選択してください。', 'error');
@@ -1793,6 +1839,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const addToDeckBtn = document.getElementById('add-to-deck-button');
         if (addToDeckBtn) {
             addToDeckBtn.addEventListener('click', () => {
+                if (state.currentLevel === 'level1' && state.totalCost >= 6) {
+                    showNotification('合計コストが6以上のためデッキに追加できません。', 'error');
+                    return;
+                }
                 if (!state.cardType || !state.cardName) {
                     showNotification('カードタイプとカード名を設定してください。', 'error');
                     return;
@@ -2028,8 +2078,15 @@ document.addEventListener('DOMContentLoaded', () => {
         createCardTypeButtons();
         setupEventListeners();
 
+        await loadEffects(state.currentLevel);
+
+        updateState();
+        renderFavoriteEffects();
+    };
+
+    const loadEffects = async (level) => {
         try {
-            const response = await fetch('assets/data.csv');
+            const response = await fetch(`assets/data_${level}.csv`);
             const csvText = await response.text();
             const jsonData = csvText.trim().split('\n').map(line => line.split(','));
 
@@ -2048,7 +2105,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!basicEffectsAByCost.has(cost)) {
                         basicEffectsAByCost.set(cost, []);
                     }
-                    // Don't add duplicates
                     if (!basicEffectsAByCost.get(cost).includes(effect.name)) {
                         basicEffectsAByCost.get(cost).push(effect.name);
                     }
@@ -2060,14 +2116,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
             createEffectButtons();
             setupHoverAccordion();
-            
-            setupTooltips(); // Setup tooltips after all buttons are created
+            setupTooltips();
+            updateCardTypeVisibility();
+            updateState();
 
         } catch (error) {
             console.error('Failed to load assets:', error);
+            showNotification(`レギュレーション[${level}]のデータ読込に失敗しました。`, 'error');
         }
-        updateState();
-        renderFavoriteEffects();
+    };
+
+    const updateCardTypeVisibility = () => {
+        const level = state.currentLevel;
+        let allowedTypes;
+
+        if (level === 'level1') {
+            allowedTypes = ['ユニット', 'スキル', 'リーダー'];
+        } else if (level === 'level2') {
+            allowedTypes = ['ユニット', 'スキル', 'リーダー', 'トラップ', '建物'];
+        } else { // level3 or any other case
+            allowedTypes = Object.keys(constants.cardTypeData);
+        }
+
+        elements.cardTypeButtonsContainer.querySelectorAll('button').forEach(button => {
+            const type = button.dataset.type;
+            if (allowedTypes.includes(type)) {
+                button.style.display = '';
+            } else {
+                button.style.display = 'none';
+            }
+        });
     };
 
     const updateCanvas = () => {
