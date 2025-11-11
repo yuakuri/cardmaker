@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 状態管理オブジェクト
     const state = {
-        currentLevel: 'level1',
+        currentLevel: 'standard',
         cardName: '',
         cardRuby: '',
         cardNameSize: 48,
@@ -566,17 +566,17 @@ document.addEventListener('DOMContentLoaded', () => {
         elements.effectCostTotal.textContent = state.effectCost;
         elements.totalCost.textContent = state.totalCost;
 
-        if (state.currentLevel === 'level1' && state.totalCost >= 6) {
+        if (state.currentLevel === 'standard' && state.totalCost >= 6) {
             elements.totalCost.style.color = 'red';
-            showNotification('合計コストが6以上です。Level1レギュレーションでは5以下にする必要があります。', 'error');
+            showNotification('合計コストが6以上です。スタンダードレギュレーションでは5以下にする必要があります。', 'error');
         } else if (state.cardType === 'リーダー' && state.totalCost <= 1) {
             elements.totalCost.style.color = 'red';
         } else {
             elements.totalCost.style.color = '';
         }
 
-        // レギュレーションがLevel1で、カードタイプがリーダーの場合、リーダーHPを15に設定
-        if (state.currentLevel === 'level1' && state.cardType === 'リーダー') {
+        // レギュレーションがスタンダードで、カードタイプがリーダーの場合、リーダーHPを15に設定
+        if (state.currentLevel === 'standard' && state.cardType === 'リーダー') {
             state.leaderHp = 15;
         } else {
             // それ以外の場合はデフォルトの20に戻す
@@ -1010,9 +1010,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!effect) return;
 
         if (isAdding) {
-            if (state.currentLevel === 'level1') {
+            if (state.currentLevel === 'standard') {
                 if (state.activeEffects.length >= 3) {
-                    showNotification('Level1レギュレーションでは効果を3つまでつけられます。', 'error');
+                    showNotification('スタンダードレギュレーションでは効果を3つまでつけられます。', 'error');
                     return;
                 }
             }
@@ -1076,8 +1076,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const potentialEffectCost = state.effectCost + costChange;
             const potentialTotalCost = state.baseAtk + state.baseHp + potentialEffectCost + cardTypeCost - 4;
 
-            if (state.currentLevel === 'level1' && potentialTotalCost >= 6) {
-                showNotification('Level1の合計コストが6以上になるため、この効果は追加できません。', 'error');
+            if (state.currentLevel === 'standard' && potentialTotalCost >= 6) {
+                showNotification('スタンダードレギュレーションでは、合計コストを6以上にできません。', 'error');
                 return;
             }
 
@@ -1246,7 +1246,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         elements.cardTypeButtonsContainer.querySelectorAll('.active').forEach(b => b.classList.remove('active'));
 
                         loadEffects(level);
-                        showNotification(`レギュレーションを Level ${level.slice(-1)} に切り替えました。`, 'info');
+                        let levelText;
+                        if (level === 'standard') {
+                            levelText = 'スタンダード';
+                        } else if (level === 'extra') {
+                            levelText = 'エクストラ';
+                        } else {
+                            levelText = `不明なレギュレーション (${level})`; // Fallback
+                        }
+                        showNotification(`レギュレーションを ${levelText} に切り替えました。`, 'info');
                     });
 
                     elements.cardNameInput.addEventListener('input', e => { state.cardName = e.target.value; render(); });
@@ -1790,7 +1798,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         elements.saveButton.addEventListener('click', () => {
-            if (state.currentLevel === 'level1' && state.totalCost >= 6) {
+            if (state.currentLevel === 'standard' && state.totalCost >= 6) {
                 showNotification('合計コストが6以上のため保存できません。', 'error');
                 return;
             }
@@ -1847,7 +1855,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const addToDeckBtn = document.getElementById('add-to-deck-button');
         if (addToDeckBtn) {
             addToDeckBtn.addEventListener('click', () => {
-                if (state.currentLevel === 'level1' && state.totalCost >= 6) {
+                if (state.currentLevel === 'standard' && state.totalCost >= 6) {
                     showNotification('合計コストが6以上のためデッキに追加できません。', 'error');
                     return;
                 }
@@ -2103,7 +2111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 name: row[0],
                 cost: parseInt(row[1], 10) || 0,
                 category: row[2],
-                isCustom: row[4] === 'X'
+                isCustom: row[3] === 'X'
             })).filter(e => e.name && e.name.trim());
 
             const basicEffectsAByCost = new Map();
@@ -2138,12 +2146,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const level = state.currentLevel;
         let allowedTypes;
 
-        if (level === 'level1') {
+        if (level === 'standard') {
             allowedTypes = ['ユニット', 'スキル', 'リーダー'];
-        } else if (level === 'level2') {
-            allowedTypes = ['ユニット', 'スキル', 'リーダー', 'トラップ', '建物'];
-        } else { // level3 or any other case
+        } else if (level === 'extra') { // level3 or any other case
             allowedTypes = Object.keys(constants.cardTypeData);
+        } else { // Fallback for any other unexpected level, perhaps default to standard
+            allowedTypes = ['ユニット', 'スキル', 'リーダー'];
         }
 
         elements.cardTypeButtonsContainer.querySelectorAll('button').forEach(button => {

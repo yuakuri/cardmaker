@@ -34,9 +34,8 @@
                     <div class="settings-group">
                         <h3>レギュレーション</h3>
                         <div id="level-selector-buttons" class="radio-button-group">
-                            <button data-level="level1" class="active">Level 1</button>
-                            <button data-level="level2">Level 2</button>
-                            <button data-level="level3">Level 3</button>
+                            <button data-level="standard" class="active">スタンダード</button>
+                            <button data-level="extra">エクストラ</button>
                         </div>
                     </div>
                 </section>
@@ -345,9 +344,7 @@
                         <ol>
                             <li>先攻と後攻を決めます</li>
                             <li>リーダーカードを裏向きにして配置します</li>
-                            <li>デッキをシャッフルし、山札を上から2枚オモテにします</li>
-                            <li>オモテにしたカードのうち、1枚を禁止ゾーンに置き、1枚を手札に加えます(禁止ゾーンのカードと同名のカードは試合中使用不可)</li>
-                            <li>山札からカードを引き、手札にします(先攻は2枚、後攻は3枚)</li>
+                            <li>シャッフルした山札からカードを引き、手札にします(先攻は3枚、後攻は4枚)</li>
                             <li>手札のカードを任意の枚数(0枚でも可)山札に戻して切り、戻した枚数分山札を引きます</li>
                             <li>「オープン！」と宣言し、リーダーカードを表向きにします</li>
                             <li>後攻プレイヤーはスキルチャージを2回します</li>
@@ -396,7 +393,7 @@
                 <div class="accordion-content">
                     <div class="settings-group">
                         <div class="game-board">
-                            <div class="board-cell banish-zone">禁止</div>
+                            <div class="board-cell lost-zone"> - </div>
                             <div class="board-cell unit-zone">ユニット</div>
                             <div class="board-cell unit-zone">ユニット</div>
                             <div class="board-cell unit-zone">ユニット</div>
@@ -496,12 +493,12 @@
                     <div class="settings-group">
                         <div class="ruleguide-grid">
                             <dl>
-                                <div><dt>におうだち</dt><dd>前列にいる場合、相手はこのユニットにのみ攻撃できます。防具についている場合、相手はリーダーにのみ攻撃できます。</dd></div>
+                                <div><dt>守護</dt><dd>前列にいる場合、相手はこのユニットにのみ攻撃できます。防具についている場合、相手はリーダーにのみ攻撃できます。</dd></div>
                                 <div><dt>貫通</dt><dd>攻撃対象にカバーされているユニットにもダメージを与えます。後列ユニットに攻撃したとき、相手リーダーにもダメージを与えます。</dd></div>
                                 <div><dt>薙ぎ払い</dt><dd>攻撃対象と同じ横列のユニットにもダメージを与えます。</dd></div>
-                                <div><dt>速攻</dt><dd>召喚したターンに攻撃できますが、そのターンのATKは-1されます。</dd></div>
+                                <div><dt>速攻</dt><dd>召喚したターンに攻撃できます。</dd></div>
                                 <div><dt>突進</dt><dd>召喚したターンに、相手ユニットにのみ攻撃できます。</dd></div>
-                                <div><dt>狙い撃ち</dt><dd>カバー、におうだちを無視して攻撃できます（ウォールは無視不可）。</dd></div>
+                                <div><dt>狙い撃ち</dt><dd>カバー、守護を無視して攻撃できます（ウォールは無視不可）。</dd></div>
                                 <div><dt>ステルス</dt><dd>攻撃する/ダメージを受ける/効果を発動する のいずれかが行われるまで、相手の攻撃・効果の対象になりません。</dd></div>
                                 <div><dt>バリア</dt><dd>相手の効果によるダメージを受けません。防具の場合、リーダーがこの効果を得ます。</dd></div>
                                 <div><dt>超バリア</dt><dd>相手のすべての効果を受けません。防具の場合、リーダーがこの効果を得ます。</dd></div>
