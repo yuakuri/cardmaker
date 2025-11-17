@@ -505,19 +505,25 @@ document.addEventListener('DOMContentLoaded', () => {
         // 合計コストは常にbaseAtkとbaseHpを元に計算
         state.totalCost = state.baseAtk + state.baseHp + state.effectCost + cardTypeCost - 4;
 
+        // ATK/HPを基本値にリセット
+        state.atk = state.baseAtk;
+        state.hp = state.baseHp;
+
         if (hasBlank) {
             // 【ブランク】有効時
-            // 1. 【ブランク】によって加算されるコストを計算（これは現在の合計コスト）
             const costForBlank = state.totalCost;
-            
-            // 2. ATK/HPを更新
-            state.atk = state.baseAtk + costForBlank;
-            state.hp = state.baseHp + costForBlank;
+            state.atk += costForBlank;
+            state.hp += costForBlank;
+        }
 
-        } else {
-            // 【ブランク】無効時 (通常の処理)
-            state.atk = state.baseAtk;
-            state.hp = state.baseHp;
+        // 【強者】と【覇者】の効果を適用
+        if (state.activeEffects.some(e => e.name.includes('【強者】'))) {
+            state.atk += 1;
+            state.hp += 1;
+        }
+        if (state.activeEffects.some(e => e.name.includes('【覇者】'))) {
+            state.atk += 3;
+            state.hp += 3;
         }
 
         elements.atk.value.textContent = state.atk;
@@ -551,13 +557,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             // コストとATK/HPを再計算
             state.totalCost = state.baseAtk + state.baseHp + state.effectCost + cardTypeCost - 4;
+            state.atk = state.baseAtk;
+            state.hp = state.baseHp;
             if (hasBlank) {
                 const costForBlank = state.totalCost;
-                state.atk = state.baseAtk + costForBlank;
-                state.hp = state.baseHp + costForBlank;
-            } else {
-                state.atk = state.baseAtk;
-                state.hp = state.baseHp;
+                state.atk += costForBlank;
+                state.hp += costForBlank;
+            }
+            // 【強者】と【覇者】の効果を適用
+            if (state.activeEffects.some(e => e.name.includes('【強者】'))) {
+                state.atk += 1;
+                state.hp += 1;
+            }
+            if (state.activeEffects.some(e => e.name.includes('【覇者】'))) {
+                state.atk += 3;
+                state.hp += 3;
             }
             elements.atk.value.textContent = state.atk;
             elements.hp.value.textContent = state.hp;
@@ -1928,7 +1942,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const manualGroupRules = {
             'ブースト○': ['ブーストⅡ', 'ブーストⅢ'],
             'ギガボディ/超ギガボディ': ['ギガボディ', '超ギガボディ'],
-            '【強者】/【覇者】': ['【強者】ATK+1/HP+1', '【覇者】ATK+3/HP+3'],
+            '【強者】/【覇者】': ['【強者】', '【覇者】'],
             'スキルリンク○：': ['スキルリンクⅠ：', 'スキルリンクⅡ：', 'スキルリンクⅢ：']
         };
 
